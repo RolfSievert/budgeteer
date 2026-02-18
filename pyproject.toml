@@ -1,0 +1,38 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "budgeteer"
+version = "0.0.1"
+authors = [
+  { name="Rolf Sievert", email="author@example.com" },
+]
+description = "Efficient entry of expenses, with tools to visualize and categorize."
+readme = "README.md"
+requires-python = ">=3.8"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+  "argparse",
+  "pathlib",
+  "enum",
+  "shutil",
+  "zipfile",
+  "io",
+  "subprocess",
+  "os",
+  "re",
+  "pyperclip",
+  "prompt_toolkit",
+]
+
+[project.urls]
+Homepage = "https://github.com/RolfSievert/budgeteer"
+Issues = "https://github.com/RolfSievert/budgeteer/issues"
+
+[project.scripts]
+budgeteer = "budgeteer.budgeteer:main"
