@@ -3,9 +3,11 @@ app_name := 'budgeteer'
 @default:
     just --list
 
-# build the project
 build:
     @python3 -m build
+
+run:
+    @./budgeteer/budgeteer.py
 
 install: build
     @pipx install .
