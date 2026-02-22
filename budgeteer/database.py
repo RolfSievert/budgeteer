@@ -20,15 +20,15 @@ class Expense(NamedTuple):
 
 def sample_categories():
     return [
-        Category(1, "sport", "sporty stuff"),
-        Category(2, "clothes", "on the feet?"),
+        Category(1, "category sport", "sporty stuff"),
+        Category(2, "category clothes", "on the feet?"),
     ]
 
 
 def sample_expenses():
     return [
-        Expense(1, "sport", 1),
-        Expense(2, "clothes", 2),
+        Expense(1, "expense sport", 1),
+        Expense(2, "expense clothes", 2),
     ]
 
 

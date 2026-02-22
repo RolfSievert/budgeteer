@@ -1,2 +1,4 @@
 dist
 *.pkg.tar.zst
+
+budgeteer/__pycache__/

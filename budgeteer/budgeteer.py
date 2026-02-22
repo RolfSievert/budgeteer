@@ -9,6 +9,7 @@ from prompt_toolkit.shortcuts import choice
 from database import Expenses
 from database import Category
 from database import Expense
+from prompt_toolkit.validation import Validator, ValidationError
 
 
 def main():
@@ -39,12 +40,32 @@ def main():
         add_expenses(database)
 
 
+class NonEmptyValidator(Validator):
+    def validate(self, document):
+        text = document.text
+
+        if not len(text):
+            raise ValidationError(message="Entry cannot be empty")
+
+        if not len(text.strip()):
+            raise ValidationError(message="Entry cannot be only whitespace")
+
+        if len(text.lstrip()) != len(text):
+            raise ValidationError(message="Entry cannot have leading whitespace")
+
+        if len(text.rstrip()) != len(text):
+            raise ValidationError(message="Entry cannot have trailing whitespace")
+
+
 def select_category(database: Expenses, default: int | None = None) -> Category:
     categories = database.get_categories()
     completer = WordCompleter([x.name for x in categories])
     default_category = next((x.name for x in categories if x.id == default), "")
     result = prompt(
-        message="Enter a category: ", completer=completer, default=default_category
+        message="Enter a category: ",
+        completer=completer,
+        default=default_category,
+        validator=NonEmptyValidator(),
     )
 
     category = next((x for x in categories if x.name == result), None)
@@ -58,7 +79,9 @@ def select_category(database: Expenses, default: int | None = None) -> Category:
 def create_expense(database: Expenses) -> Expense:
     expenses = database.get_expenses()
     completer = WordCompleter([expense.name for expense in expenses])
-    result = prompt(message="Enter an expense: ", completer=completer)
+    result = prompt(
+        message="Enter an expense: ", completer=completer, validator=NonEmptyValidator()
+    )
 
     expense = next((x for x in expenses if x.name == result), None)
     category = expense.category_id if expense is not None else None
