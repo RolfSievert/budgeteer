@@ -27,7 +27,10 @@ but if you want to, you can exchange `pipx` with `pip`.
 
 ## Requirements
 
-- `prompt_toolkit` python package
+Python packages
+- `prompt_toolkit`
+- `platformdirs`
+- `sqlite3`
 
 ## Usage
 

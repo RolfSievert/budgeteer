@@ -7,7 +7,7 @@ build:
     @python3 -m build
 
 run:
-    @./budgeteer/budgeteer.py
+    @./budgeteer/main.py
 
 install: build
     @pipx install .

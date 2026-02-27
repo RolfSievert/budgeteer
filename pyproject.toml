@@ -21,13 +21,13 @@ dependencies = [
   "pathlib",
   "enum",
   "shutil",
-  "zipfile",
-  "io",
-  "subprocess",
+  "io", # importing/exporting from/to csv
   "os",
   "re",
-  "pyperclip",
-  "prompt_toolkit",
+  "prompt_toolkit", # interactive prompts, tab completion
+  "platformdirs", # cross-platform way to get data and cache dirs
+  "sqlite3", # database
+  "datetime"
 ]
 
 [project.urls]

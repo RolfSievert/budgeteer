@@ -1,52 +1,106 @@
-from typing import NamedTuple
+from models.expense import Expense
+from models.category import Category
+from migrations import v1_add_category, v2_add_expense
+
+from pathlib import Path
+import sqlite3
+from datetime import date, datetime
 
 
-class Category(NamedTuple):
-    id: int
-    name: str
-    description: str
+class Database:
+    def __init__(self, path: Path):
+        self.connection = sqlite3.connect(path)
+        self._migrate()
 
+    def __sample_categories(self) -> list[Category]:
+        """TODO: REMOVE"""
+        return [
+            self.new_category(name="category_sport", description="sporty stuf"),
+            self.new_category(name="category_clothes", description="on the feet?"),
+        ]
 
-class Expense(NamedTuple):
-    id: int
-    name: str
-    category_id: int | None
+    def __sample_expenses(self) -> list[Expense]:
+        """TODO: REMOVE"""
+        return [
+            self.new_expense("expense_sport", date.today(), 2),
+            self.new_expense("expense_clothes", date.today(), 1),
+        ]
 
-    def __str__(self) -> str:
-        return (
-            f"Expense(id={self.id}, name={self.name}, catogory_id={self.category_id})"
+    def _str_to_date(self, time: str) -> date:
+        return date.fromisoformat(time)
+
+    def _date_to_str(self, time: date) -> str:
+        return time.isoformat()
+
+    def _str_to_time(self, time: str) -> datetime:
+        return datetime.fromisoformat(time)
+
+    def _time_to_str(self, time: datetime) -> str:
+        return time.isoformat()
+
+    def _ensure_has_version(self):
+        cursor = self.connection.cursor()
+        cursor.execute(
+            """
+            CREATE TABLE IF NOT EXISTS schema_version (
+                version INTEGER PRIMARY KEY
+            );
+            """
         )
+        self.connection.commit()
 
+    def _get_version(self) -> int:
+        cursor = self.connection.cursor()
+        res = cursor.execute(
+            """
+            select version from schema_version
+            """
+        )
+        return res.fetchone()[0]
 
-def sample_categories():
-    return [
-        Category(1, "category sport", "sporty stuff"),
-        Category(2, "category clothes", "on the feet?"),
-    ]
+    def _migrate(self):
+        self._ensure_has_version()
+        version = self._get_version()
 
+        # NOTE: these must be in order!
+        migrations = [
+            v1_add_category.add_category_migration(),
+            v2_add_expense.add_expense_migration(),
+        ]
 
-def sample_expenses():
-    return [
-        Expense(1, "expense sport", 1),
-        Expense(2, "expense clothes", 2),
-    ]
+        for migration in sorted(migrations, key=lambda x: x.version):
+            if migration.version > version:
+                migration.up(self.connection)
+            else:
+                break
 
-
-class Expenses:
     def get_categories(self) -> list[Category]:
-        return sample_categories()
+        return self.__sample_categories()
 
     def new_category(self, name: str, description: str) -> Category:
         print("not implemented")
-        return Category(-1, name=name, description=description)
+        return Category(
+            id=-1, name=name, created_at=datetime.now(), description=description
+        )
 
     def get_expenses(self) -> list[Expense]:
-        return sample_expenses()
+        return self.__sample_expenses()
 
-    def new_expense(self, name: str, category: int | None) -> Expense:
+    def new_expense(self, name: str, date: date, category: int | None) -> Expense:
         print("not implemented")
-        return Expense(-1, name=name, category_id=category)
+        return Expense(
+            id=-1, created_at=datetime.now(), name=name, date=date, category_id=category
+        )
 
     def update_expense_category(self, expense_id: int, category_id: int) -> Expense:
         print("not implemented")
-        return Expense(expense_id, name="unknown", category_id=category_id)
+        return Expense(
+            id=expense_id,
+            created_at=datetime.now(),
+            name="unknown",
+            date=date.today(),
+            category_id=category_id,
+        )
+
+    def export(self, csv_path: Path) -> None:
+        print("not implemented")
