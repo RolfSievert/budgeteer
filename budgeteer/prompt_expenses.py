@@ -103,7 +103,7 @@ def prompt_expensess(database: Database) -> None:
     year_prompt = prompt("Enter year: ", default=f"{date.today().year}")
     year = int(year_prompt)
 
-    month_prompt = prompt("Enter year: ", default=f"{date.today().month}")
+    month_prompt = prompt("Enter month: ", default=f"{date.today().month}")
     month = int(month_prompt)
 
     day = 0

@@ -4,6 +4,7 @@ from .migration import Migration
 def add_category_migration() -> Migration:
     return Migration(
         version=1,
+        description="Create the categories table",
         up="""
         CREATE TABLE categories(
             id INTEGER PRIMARY KEY,

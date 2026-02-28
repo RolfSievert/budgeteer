@@ -11,5 +11,5 @@ class Expense(NamedTuple):
 
     def __str__(self) -> str:
         return (
-            f"Expense(id={self.id}, name={self.name}, catogory_id={self.category_id})"
+            f"Expense(id={self.id}, name={self.name}, category_id={self.category_id})"
         )

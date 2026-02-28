@@ -1,5 +1,5 @@
-from models.expense import Expense
-from models.category import Category
+from models.expense import Expense  # ty:ignore[unresolved-import]
+from models.category import Category  # ty:ignore[unresolved-import]
 from migrations import v1_add_category, v2_add_expense
 
 from pathlib import Path
@@ -9,7 +9,12 @@ from datetime import date, datetime
 
 class Database:
     def __init__(self, path: Path):
+        self.path = path
         self.connection = sqlite3.connect(path)
+        # Holds the version of the database migrations
+        self._schema_table = "schema_version"
+
+        # migrate the database if needed
         self._migrate()
 
     def __sample_categories(self) -> list[Category]:
@@ -38,28 +43,62 @@ class Database:
     def _time_to_str(self, time: datetime) -> str:
         return time.isoformat()
 
-    def _ensure_has_version(self):
+    def _is_initialized(self) -> bool:
+        cursor = self.connection.cursor()
+
+        # check if the table exists, returns empty list otherwise
+        table_match = cursor.execute(
+            f"SELECT name FROM sqlite_master WHERE type='table' AND name='{self._schema_table}'"
+        )
+        return len(table_match.fetchall()) > 0
+
+    def _initialize(self):
         cursor = self.connection.cursor()
         cursor.execute(
-            """
-            CREATE TABLE IF NOT EXISTS schema_version (
+            f"""
+            CREATE TABLE IF NOT EXISTS {self._schema_table} (
                 version INTEGER PRIMARY KEY
             );
             """
+        )
+
+        version = (0,)
+        cursor = self.connection.cursor()
+        cursor.execute(
+            """
+            INSERT INTO schema_version VALUES(?)
+            """,
+            version,
+        )
+        self.connection.commit()
+
+    def _set_version(self, version: int) -> None:
+        cursor = self.connection.cursor()
+
+        cursor.execute(
+            """
+            UPDATE schema_version
+            SET version = ?
+            where version != -1
+            """,
+            (version,),
         )
         self.connection.commit()
 
     def _get_version(self) -> int:
         cursor = self.connection.cursor()
         res = cursor.execute(
-            """
-            select version from schema_version
+            f"""
+            select version from {self._schema_table}
             """
         )
         return res.fetchone()[0]
 
     def _migrate(self):
-        self._ensure_has_version()
+        if not self._is_initialized():
+            print("Initializing database (only happens with a new database)")
+            self._initialize()
+
         version = self._get_version()
 
         # NOTE: these must be in order!
@@ -70,7 +109,9 @@ class Database:
 
         for migration in sorted(migrations, key=lambda x: x.version):
             if migration.version > version:
+                print(f"Applied migration: {migration.description}")
                 migration.up(self.connection)
+                self._set_version(migration.version)
             else:
                 break
 

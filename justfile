@@ -6,16 +6,16 @@ app_name := 'budgeteer'
 build:
     @python3 -m build
 
-run:
-    @./budgeteer/main.py
+run *args:
+    @./budgeteer/main.py {{ args }} --database-path test/test.sqlite
 
 install: build
     @pipx install .
 
 install-arch:
     @makepkg --syncdeps --force --clean
-    @sudo pacman -U {{app_name}}*-x86_64.pkg.tar.zst
+    @sudo pacman -U {{ app_name }}*-x86_64.pkg.tar.zst
 
 uninstall:
     @pip install pip-autoremove
-    @pip-autoremove {{app_name}} -y
+    @pip-autoremove {{ app_name }} -y
