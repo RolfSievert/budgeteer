@@ -1,5 +1,5 @@
-from typing import NamedTuple
 from datetime import date, datetime
+from typing import NamedTuple
 
 
 class Expense(NamedTuple):

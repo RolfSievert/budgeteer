@@ -1,6 +1,6 @@
-from models.expense import Expense  # ty:ignore[unresolved-import]
-from models.category import Category  # ty:ignore[unresolved-import]
-from migrations import v1_add_category, v2_add_expense
+from budgeteer.models.expense import Expense
+from budgeteer.models.category import Category
+from budgeteer.migrations import v1_add_category, v2_add_expense
 
 from pathlib import Path
 import sqlite3

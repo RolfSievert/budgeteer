@@ -1,12 +1,13 @@
-from database import Database
-from models.category import Category
-from models.expense import Expense
-from str_utils import str_to_date
-
 from datetime import date
-from prompt_toolkit.validation import Validator, ValidationError
-from prompt_toolkit.completion import WordCompleter
+
 from prompt_toolkit import prompt
+from prompt_toolkit.completion import WordCompleter
+from prompt_toolkit.validation import ValidationError, Validator
+
+from budgeteer.database import Database
+from budgeteer.models.category import Category
+from budgeteer.models.expense import Expense
+from budgeteer.str_utils import str_to_date
 
 
 class NonEmptyValidator(Validator):
@@ -99,7 +100,6 @@ def prompt_expense(database: Database, year: int, month: int, day: int) -> Expen
 
 
 def prompt_expensess(database: Database) -> None:
-
     year_prompt = prompt("Enter year: ", default=f"{date.today().year}")
     year = int(year_prompt)
 

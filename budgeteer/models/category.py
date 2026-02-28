@@ -1,5 +1,5 @@
-from typing import NamedTuple
 from datetime import datetime
+from typing import NamedTuple
 
 
 class Category(NamedTuple):

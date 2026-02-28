@@ -2,13 +2,14 @@
 # -*- coding: utf-8 -*-
 # vim:fenc=utf-8
 
-from prompt_expenses import prompt_expensess
-from database import Database
-
 import argparse
-from prompt_toolkit.shortcuts import choice
 from pathlib import Path
+
 from platformdirs import PlatformDirs
+from prompt_toolkit.shortcuts import choice
+
+from budgeteer.database import Database
+from budgeteer.prompt_expenses import prompt_expensess
 
 
 def data_dir() -> Path:

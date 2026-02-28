@@ -2,3 +2,6 @@ dist
 *.pkg.tar.zst
 
 budgeteer/__pycache__/
+budgeteer/migrations/__pycache__/
+budgeteer/models/__pycache__/
+test

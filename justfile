@@ -7,7 +7,8 @@ build:
     @python3 -m build
 
 run *args:
-    @./budgeteer/main.py {{ args }} --database-path test/test.sqlite
+    # use -m so that imports are relative the package root
+    python3 -m {{ app_name }}.main {{ args }} --database-path test/test.sqlite
 
 install: build
     @pipx install .
