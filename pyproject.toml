@@ -35,4 +35,10 @@ Homepage = "https://github.com/RolfSievert/budgeteer"
 Issues = "https://github.com/RolfSievert/budgeteer/issues"
 
 [project.scripts]
-budgeteer = "budgeteer.budgeteer:main"
+budgeteer = "budgeteer.main:main"
+
+[tool.ruff]
+fix = true
+
+[tool.ruff.lint]
+extend-select = ["I"] # enable warnings in LSP for unsorted imports
