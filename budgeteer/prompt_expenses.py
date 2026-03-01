@@ -58,19 +58,11 @@ def prompt_category(database: Database, default: int | None = None) -> Category:
     return category
 
 
-def create_expense(database: Database, year: int, month: int, day: int) -> Expense:
-    expenses = database.get_expenses()
-    completer = WordCompleter([expense.name for expense in expenses])
-    result = prompt(
-        message="Enter an expense: ", completer=completer, validator=NonEmptyValidator()
-    )
-
-    expense = next((x for x in expenses if x.name == result), None)
-    date = expense.date if expense is not None else None
-
+def prompt_date(year: int, month: int, day: int) -> date:
     def str_or_empty(num: int | None) -> str:
         return f"{num}" if num else ""
 
+    date = None
     while date is None:
         date_prompt = prompt(
             "Enter a date: ",
@@ -79,6 +71,19 @@ def create_expense(database: Database, year: int, month: int, day: int) -> Expen
         )
         date = str_to_date(date_prompt)
 
+    return date
+
+
+def create_expense(database: Database, year: int, month: int, day: int) -> Expense:
+    # TODO: get unique expenses (name) and order by latest date
+    expenses = database.get_expenses()
+    completer = WordCompleter([expense.name for expense in expenses])
+    result = prompt(
+        message="Enter an expense: ", completer=completer, validator=NonEmptyValidator()
+    )
+
+    expense = next((x for x in expenses if x.name == result), None)
+    date = prompt_date(year=year, month=month, day=day)
     category = expense.category_id if expense is not None else None
 
     new_expense = database.new_expense(
@@ -93,7 +98,7 @@ def prompt_expense(database: Database, year: int, month: int, day: int) -> Expen
     category = prompt_category(database, default=expense.category_id)
 
     if expense.category_id != category.id:
-        expense = database.update_expense_category(expense.id, category.id)
+        expense = database.update_expense_category(expense, category.id)
 
     return expense
 

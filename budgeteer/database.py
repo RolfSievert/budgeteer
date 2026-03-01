@@ -30,6 +30,7 @@ class Database:
         return time.isoformat()
 
     def _is_initialized(self) -> bool:
+        self.connection.row_factory = None
         cursor = self.connection.cursor()
 
         # check if the table exists, returns empty list otherwise
@@ -39,6 +40,7 @@ class Database:
         return len(table_match.fetchall()) > 0
 
     def _initialize(self):
+        self.connection.row_factory = None
         cursor = self.connection.cursor()
         cursor.execute(
             f"""
@@ -59,6 +61,7 @@ class Database:
         self.connection.commit()
 
     def _set_version(self, version: int) -> None:
+        self.connection.row_factory = None
         cursor = self.connection.cursor()
 
         cursor.execute(
@@ -72,6 +75,7 @@ class Database:
         self.connection.commit()
 
     def _get_version(self) -> int:
+        self.connection.row_factory = None
         cursor = self.connection.cursor()
         res = cursor.execute(
             f"""
@@ -114,6 +118,7 @@ class Database:
         return [category_from_sql(e) for e in result.fetchall()]
 
     def new_category(self, category: Category) -> Category:
+        self.connection.row_factory = None
         cursor = self.connection.cursor()
 
         cursor.execute(
@@ -153,6 +158,7 @@ class Database:
         return id
 
     def new_expense(self, expense: Expense) -> Expense:
+        self.connection.row_factory = None
         cursor = self.connection.cursor()
 
         cursor.execute(
@@ -166,15 +172,22 @@ class Database:
 
         return expense._replace(id=self._last_row_id(cursor))
 
-    def update_expense_category(self, expense_id: int, category_id: int) -> Expense:
-        print("not implemented")
-        return Expense(
-            id=expense_id,
-            created_at=datetime.now(),
-            name="unknown",
-            date=date.today(),
-            category_id=category_id,
+    def update_expense_category(self, expense: Expense, category_id: int) -> Expense:
+        self.connection.row_factory = None
+        cursor = self.connection.cursor()
+
+        cursor.execute(
+            f"""
+            UPDATE {Expense.table_name()}
+            SET category_id = ?
+            WHERE id = ?
+            """,
+            (category_id, expense.id),
         )
+
+        self.connection.commit()
+
+        return expense._replace(category_id=category_id)
 
     def export(self, csv_path: Path) -> None:
         print("not implemented")

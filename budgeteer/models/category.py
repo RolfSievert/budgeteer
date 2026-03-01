@@ -1,6 +1,8 @@
 from datetime import datetime
 from typing import NamedTuple
 
+from budgeteer.str_utils import str_to_time
+
 
 class Category(NamedTuple):
     name: str
@@ -31,9 +33,13 @@ class Category(NamedTuple):
 
 
 def category_from_sql(sql: dict) -> Category:
+    created_at = str_to_time(sql["created_at"])
+    if not created_at:
+        raise RuntimeError(f"Could not parse date: {created_at}")
+
     return Category(
         id=sql["id"],
-        created_at=sql["created_at"],
+        created_at=created_at,
         name=sql["name"],
         description=sql["description"],
     )
