@@ -53,7 +53,7 @@ def prompt_category(database: Database, default: int | None = None) -> Category:
     category = next((x for x in categories if x.name == result), None)
 
     if category is None:
-        category = database.new_category(result, "")
+        category = database.new_category(Category(name=result, description=""))
 
     return category
 
@@ -81,7 +81,9 @@ def create_expense(database: Database, year: int, month: int, day: int) -> Expen
 
     category = expense.category_id if expense is not None else None
 
-    new_expense = database.new_expense(name=result, date=date, category=category)
+    new_expense = database.new_expense(
+        Expense(name=result, date=date, category_id=category)
+    )
 
     return new_expense
 
@@ -92,9 +94,6 @@ def prompt_expense(database: Database, year: int, month: int, day: int) -> Expen
 
     if expense.category_id != category.id:
         expense = database.update_expense_category(expense.id, category.id)
-
-    print("Done!")
-    print(f"Entered {expense}")
 
     return expense
 

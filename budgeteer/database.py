@@ -1,10 +1,10 @@
-from budgeteer.models.expense import Expense
-from budgeteer.models.category import Category
-from budgeteer.migrations import v1_add_category, v2_add_expense
-
-from pathlib import Path
 import sqlite3
 from datetime import date, datetime
+from pathlib import Path
+
+from budgeteer.migrations import v1_add_category, v2_add_expense
+from budgeteer.models.category import Category, category_from_sql
+from budgeteer.models.expense import Expense, expense_from_sql
 
 
 class Database:
@@ -16,20 +16,6 @@ class Database:
 
         # migrate the database if needed
         self._migrate()
-
-    def __sample_categories(self) -> list[Category]:
-        """TODO: REMOVE"""
-        return [
-            self.new_category(name="category_sport", description="sporty stuf"),
-            self.new_category(name="category_clothes", description="on the feet?"),
-        ]
-
-    def __sample_expenses(self) -> list[Expense]:
-        """TODO: REMOVE"""
-        return [
-            self.new_expense("expense_sport", date.today(), 2),
-            self.new_expense("expense_clothes", date.today(), 1),
-        ]
 
     def _str_to_date(self, time: str) -> date:
         return date.fromisoformat(time)
@@ -116,22 +102,69 @@ class Database:
                 break
 
     def get_categories(self) -> list[Category]:
-        return self.__sample_categories()
+        self.connection.row_factory = sqlite3.Row
+        cursor = self.connection.cursor()
 
-    def new_category(self, name: str, description: str) -> Category:
-        print("not implemented")
-        return Category(
-            id=-1, name=name, created_at=datetime.now(), description=description
+        result = cursor.execute(
+            f"""
+            SELECT * from {Category.table_name()}
+            """
         )
+
+        return [category_from_sql(e) for e in result.fetchall()]
+
+    def new_category(self, category: Category) -> Category:
+        cursor = self.connection.cursor()
+
+        cursor.execute(
+            f"""
+            INSERT INTO {Category.table_name()} VALUES({category.sql_values()})
+            """,
+            category.to_sql(),
+        )
+
+        self.connection.commit()
+
+        return category._replace(id=self._last_row_id(cursor))
 
     def get_expenses(self) -> list[Expense]:
-        return self.__sample_expenses()
+        self.connection.row_factory = sqlite3.Row
+        cursor = self.connection.cursor()
 
-    def new_expense(self, name: str, date: date, category: int | None) -> Expense:
-        print("not implemented")
-        return Expense(
-            id=-1, created_at=datetime.now(), name=name, date=date, category_id=category
+        result = cursor.execute(
+            f"""
+            SELECT * from {Expense.table_name()}
+            """
         )
+
+        return [expense_from_sql(e) for e in result.fetchall()]
+
+    def _last_row_id(self, cursor: sqlite3.Cursor) -> int:
+        """
+        Gets the primary key of the last inserted row
+        """
+        id = cursor.lastrowid
+
+        if not isinstance(id, int):
+            raise RuntimeError(
+                f"Expected integer primary key, got {id!r} ({type(id).__name__})"
+            )
+
+        return id
+
+    def new_expense(self, expense: Expense) -> Expense:
+        cursor = self.connection.cursor()
+
+        cursor.execute(
+            f"""
+            INSERT INTO {Expense.table_name()} VALUES({expense.sql_values()})
+            """,
+            expense.to_sql(),
+        )
+
+        self.connection.commit()
+
+        return expense._replace(id=self._last_row_id(cursor))
 
     def update_expense_category(self, expense_id: int, category_id: int) -> Expense:
         print("not implemented")
