@@ -10,7 +10,9 @@ def add_expense_migration() -> Migration:
             id INTEGER PRIMARY KEY,
             created_at TEXT NOT NULL,
             name TEXT NOT NULL,
-            date TEXT NOT NULL,
+            year int NOT NULL,
+            month int NOT NULL,
+            day int NOT NULL,
             category_id INT,
             FOREIGN KEY (category_id) REFERENCES categories(id)
                 ON DELETE SET NULL      -- set the value to null if category gets deleted

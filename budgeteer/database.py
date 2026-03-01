@@ -117,6 +117,21 @@ class Database:
 
         return [category_from_sql(e) for e in result.fetchall()]
 
+    def get_category(self, id: int) -> Category:
+        self.connection.row_factory = sqlite3.Row
+        cursor = self.connection.cursor()
+
+        result = cursor.execute(
+            f"""
+            SELECT * from {Category.table_name()}
+            WHERE id = ?
+            LIMIT 1
+            """,
+            (id,),
+        )
+
+        return category_from_sql(result.fetchone())
+
     def new_category(self, category: Category) -> Category:
         self.connection.row_factory = None
         cursor = self.connection.cursor()
@@ -139,6 +154,20 @@ class Database:
         result = cursor.execute(
             f"""
             SELECT * from {Expense.table_name()}
+            """
+        )
+
+        return [expense_from_sql(e) for e in result.fetchall()]
+
+    def get_expenses_by_unique_names(self) -> list[Expense]:
+        self.connection.row_factory = sqlite3.Row
+        cursor = self.connection.cursor()
+
+        result = cursor.execute(
+            f"""
+            SELECT * from {Expense.table_name()}
+            GROUP BY name
+            ORDER BY year DESC, month DESC, day DESC;
             """
         )
 

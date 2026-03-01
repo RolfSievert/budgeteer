@@ -1,15 +1,20 @@
 from datetime import date, datetime
 from typing import NamedTuple
 
-from budgeteer.str_utils import str_to_date, str_to_time
+from budgeteer.str_utils import str_to_time
 
 
 class Expense(NamedTuple):
     name: str
-    date: date
+    year: int
+    month: int
+    day: int
     category_id: int | None
+    created_at: datetime
     id: int = -1  # id is -1 if not added to the database
-    created_at: datetime = datetime.now()
+
+    def date(self) -> date:
+        return date(self.year, self.month, self.day)
 
     def __str__(self) -> str:
         return f"{self.__class__.__name__}(id={self.id}, created_at={self.created_at}, name={self.name}, category_id={self.category_id})"
@@ -19,7 +24,9 @@ class Expense(NamedTuple):
             "id": self.id if self.id != -1 else None,
             "created_at": self.created_at,
             "name": self.name,
-            "date": self.date,
+            "year": self.year,
+            "month": self.month,
+            "day": self.day,
             "category_id": self.category_id,
         }
 
@@ -35,18 +42,16 @@ class Expense(NamedTuple):
 
 
 def expense_from_sql(sql: dict) -> Expense:
-    date = str_to_date(sql["date"])
-    if not date:
-        raise RuntimeError(f"Could not parse date: {date}")
-
     created_at = str_to_time(sql["created_at"])
     if not created_at:
-        raise RuntimeError(f"Could not parse date: {created_at}")
+        raise RuntimeError(f"Could not parse created_at: {created_at}")
 
     return Expense(
         id=sql["id"],
         created_at=created_at,
         name=sql["name"],
-        date=date,
+        year=sql["year"],
+        month=sql["month"],
+        day=sql["day"],
         category_id=sql["category_id"],
     )

@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, datetime
 
 from prompt_toolkit import prompt
 from prompt_toolkit.completion import WordCompleter
@@ -53,7 +53,9 @@ def prompt_category(database: Database, default: int | None = None) -> Category:
     category = next((x for x in categories if x.name == result), None)
 
     if category is None:
-        category = database.new_category(Category(name=result, description=""))
+        category = database.new_category(
+            Category(name=result, description="", created_at=datetime.now())
+        )
 
     return category
 
@@ -75,19 +77,33 @@ def prompt_date(year: int, month: int, day: int) -> date:
 
 
 def create_expense(database: Database, year: int, month: int, day: int) -> Expense:
-    # TODO: get unique expenses (name) and order by latest date
     expenses = database.get_expenses()
-    completer = WordCompleter([expense.name for expense in expenses])
+    expense_names = list({expense.name for expense in expenses})
+    completer = WordCompleter(expense_names)
     result = prompt(
         message="Enter an expense: ", completer=completer, validator=NonEmptyValidator()
     )
 
-    expense = next((x for x in expenses if x.name == result), None)
     date = prompt_date(year=year, month=month, day=day)
-    category = expense.category_id if expense is not None else None
+
+    # use a matching expense to set the default category
+    matches = [x for x in expenses if x.name == result]
+    latest_expense = max(
+        matches,
+        key=lambda e: e.created_at,
+        default=None,
+    )
+    category = latest_expense.category_id if latest_expense else None
 
     new_expense = database.new_expense(
-        Expense(name=result, date=date, category_id=category)
+        Expense(
+            name=result,
+            year=date.year,
+            month=date.month,
+            day=date.day,
+            category_id=category,
+            created_at=datetime.now(),
+        )
     )
 
     return new_expense
@@ -114,4 +130,4 @@ def prompt_expensess(database: Database) -> None:
 
     while True:
         expense = prompt_expense(database, year=year, month=month, day=day)
-        day = expense.date.day
+        day = expense.day

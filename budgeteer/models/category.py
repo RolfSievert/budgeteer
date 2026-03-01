@@ -7,8 +7,8 @@ from budgeteer.str_utils import str_to_time
 class Category(NamedTuple):
     name: str
     description: str | None
+    created_at: datetime
     id: int = -1  # id is -1 if not added to the database
-    created_at: datetime = datetime.now()
 
     def __str__(self) -> str:
         return f"{self.__class__.__name__}(id={self.id}, created_at={self.created_at}, name={self.name}, description={self.description})"
