@@ -6,6 +6,7 @@ from budgeteer.str_utils import str_to_time
 
 class Expense(NamedTuple):
     name: str
+    price: float
     year: int
     month: int
     day: int
@@ -17,13 +18,14 @@ class Expense(NamedTuple):
         return date(self.year, self.month, self.day)
 
     def __str__(self) -> str:
-        return f"{self.__class__.__name__}(id={self.id}, created_at={self.created_at}, name={self.name}, category_id={self.category_id})"
+        return f"{self.__class__.__name__}(id={self.id}, created_at={self.created_at}, name={self.name}, price={self.price}, category_id={self.category_id})"
 
     def to_sql(self) -> dict:
         return {
             "id": self.id if self.id != -1 else None,
             "created_at": self.created_at,
             "name": self.name,
+            "price": self.price,
             "year": self.year,
             "month": self.month,
             "day": self.day,
@@ -50,6 +52,7 @@ def expense_from_sql(sql: dict) -> Expense:
         id=sql["id"],
         created_at=created_at,
         name=sql["name"],
+        price=sql["price"],
         year=sql["year"],
         month=sql["month"],
         day=sql["day"],

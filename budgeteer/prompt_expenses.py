@@ -38,6 +38,16 @@ class DateValidator(Validator):
                 message="Date has to be on the format '1994-01-09' (year-month-day)"
             )
 
+class PriceValidator(Validator):
+    def validate(self, document):
+        text = document.text
+
+        try:
+            float(text)
+        except ValueError:
+            raise ValidationError(
+                message="Invalid price format. Some valid examples: 11.0, 5, 0.1, -20"
+            )
 
 def prompt_category(database: Database, default: int | None = None) -> Category:
     categories = database.get_categories()
@@ -75,6 +85,13 @@ def prompt_date(year: int, month: int, day: int) -> date:
 
     return date
 
+def prompt_price() -> float:
+    res = prompt(
+        "Enter a price: ",
+        validator=PriceValidator(),
+    )
+
+    return float(res)
 
 def create_expense(database: Database, year: int, month: int, day: int) -> Expense:
     expenses = database.get_expenses()
@@ -84,6 +101,7 @@ def create_expense(database: Database, year: int, month: int, day: int) -> Expen
         message="Enter an expense: ", completer=completer, validator=NonEmptyValidator()
     )
 
+    price = prompt_price()
     date = prompt_date(year=year, month=month, day=day)
 
     # use a matching expense to set the default category
@@ -98,6 +116,7 @@ def create_expense(database: Database, year: int, month: int, day: int) -> Expen
     new_expense = database.new_expense(
         Expense(
             name=result,
+            price=price,
             year=date.year,
             month=date.month,
             day=date.day,
@@ -119,7 +138,7 @@ def prompt_expense(database: Database, year: int, month: int, day: int) -> Expen
     return expense
 
 
-def prompt_expensess(database: Database) -> None:
+def prompt_expenses(database: Database) -> None:
     year_prompt = prompt("Enter year: ", default=f"{date.today().year}")
     year = int(year_prompt)
 

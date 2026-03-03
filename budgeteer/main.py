@@ -9,7 +9,7 @@ from platformdirs import PlatformDirs
 from prompt_toolkit.shortcuts import choice
 
 from budgeteer.database import Database
-from budgeteer.prompt_expenses import prompt_expensess
+from budgeteer.prompt_expenses import prompt_expenses
 
 
 def data_dir() -> Path:
@@ -70,7 +70,7 @@ def program_loop(db: Database, sync_csv: Path | None) -> bool:
     )
 
     if result == add_expenses_option[0]:
-        prompt_expensess(db)
+        prompt_expenses(db)
         pass
 
     if result == quit_option[0]:
