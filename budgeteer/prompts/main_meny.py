@@ -34,6 +34,7 @@ def main_menu(db: Database) -> MainMenuOptions | None:
     def submit(event: KeyPressEvent):
         event.app.exit(result=prompt_window.current_value)
 
+    @kb.add("escape")
     @kb.add("c-c")
     @kb.add("c-d")
     @kb.add("c-q")
