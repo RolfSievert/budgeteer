@@ -1,15 +1,15 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 # vim:fenc=utf-8
-
 import argparse
 from pathlib import Path
 
 from platformdirs import PlatformDirs
-from prompt_toolkit.shortcuts import choice
 
 from budgeteer.database import Database
 from budgeteer.prompt_expenses import prompt_expenses
+from budgeteer.prompts.main_menu_options import MainMenuOptions
+from budgeteer.prompts.main_meny import main_menu
 
 
 def data_dir() -> Path:
@@ -49,37 +49,19 @@ def main():
     db_path: Path = args.database_path
     # create the db path if it does not exist already
     db_path.parent.mkdir(parents=True, exist_ok=True)
+    csv_path = args.sync_csv_on_exit
 
     database = Database(db_path)
 
-    while program_loop(db=database, sync_csv=args.sync_csv_on_exit):
-        pass
+    while True:
+        option = main_menu(db=database)
 
-
-def program_loop(db: Database, sync_csv: Path | None) -> bool:
-    add_expenses_option = (
-        "add expenses",
-        "Tool to add expenses one by one with tab completion",
-    )
-    import_export_option = ("import/export", "Import or export from/to csv")
-    quit_option = ("quit", "")
-
-    result = choice(
-        message="Choose an action:",
-        options=[add_expenses_option, import_export_option, quit_option],
-    )
-
-    if result == add_expenses_option[0]:
-        prompt_expenses(db)
-        pass
-
-    if result == quit_option[0]:
-        if sync_csv:
-            db.export(sync_csv)
-        return False
-
-    # return true to continue running the program
-    return True
+        if option == MainMenuOptions.quit or option is None:
+            if csv_path:
+                database.export(csv_path)
+            break
+        elif option == MainMenuOptions.add_expenses:
+            prompt_expenses(database)
 
 
 if __name__ == "__main__":
