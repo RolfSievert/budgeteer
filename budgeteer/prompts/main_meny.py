@@ -10,18 +10,24 @@ def main_menu(db: Database) -> MainMenuOptions | None:
     add_expenses_option = (MainMenuOptions.add_expenses, "add expenses")
     quit_option = (MainMenuOptions.quit, "quit")
 
+    descriptions = {
+        MainMenuOptions.add_expenses: "Select a month to add expenses to",
+        MainMenuOptions.quit: "Exit the application",
+    }
+
     kb = KeyBindings()
 
     big_window = widgets.Label("hello", dont_extend_height=False)
+    options = [add_expenses_option, quit_option]
     prompt_window = widgets.RadioList(
-        [add_expenses_option, quit_option],
+        options,
         select_on_focus=True,
         open_character="",
         close_character="",
         select_character=">>",
         show_cursor=False,
     )
-    status_bar = widgets.Label("bar")
+    status_bar = widgets.Label(" " + descriptions[options[0][0]])
 
     # RadioList swallows events, eager takes the events first
     @kb.add("enter", eager=True)
@@ -33,6 +39,33 @@ def main_menu(db: Database) -> MainMenuOptions | None:
     @kb.add("c-q")
     def quit(event: KeyPressEvent):
         event.app.exit(result=None)
+
+    @kb.add("up", eager=True)
+    @kb.add("k", eager=True)
+    def cursor_up(event: KeyPressEvent):
+        i = next(
+            i
+            for i, x in enumerate(prompt_window.values)
+            if x[0] == prompt_window.current_value
+        )
+        prompt_window.current_value = prompt_window.values[i - 1 if i > 0 else 0][0]
+        status_bar.text = " " + descriptions[prompt_window.current_value]
+        return True
+
+    @kb.add("down", eager=True)
+    @kb.add("j", eager=True)
+    def cursor_down(event: KeyPressEvent):
+        i = next(
+            i
+            for i, x in enumerate(prompt_window.values)
+            if x[0] == prompt_window.current_value
+        )
+        values_max = len(prompt_window.values) - 1
+        prompt_window.current_value = prompt_window.values[
+            i + 1 if i < values_max else values_max
+        ][0]
+        status_bar.text = " " + descriptions[prompt_window.current_value]
+        return True
 
     layout = Layout(
         HSplit(
@@ -48,11 +81,4 @@ def main_menu(db: Database) -> MainMenuOptions | None:
 
     result = app.run()
 
-    if result == add_expenses_option[0]:
-        return MainMenuOptions.add_expenses
-    elif result == quit_option[0]:
-        return MainMenuOptions.quit
-    elif result is None:
-        return None
-    else:
-        raise RuntimeError(f"Option {result} is not implemented")
+    return result
