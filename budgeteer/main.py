@@ -7,7 +7,7 @@ from pathlib import Path
 from platformdirs import PlatformDirs
 
 from budgeteer.database import Database
-from budgeteer.prompt_expenses import prompt_expenses
+from budgeteer.prompts.enter_expenses import enter_expenses
 from budgeteer.prompts.main_menu_options import MainMenuOptions
 from budgeteer.prompts.main_meny import main_menu
 from budgeteer.prompts.month_selection import month_selection
@@ -66,7 +66,7 @@ def main():
             if not month:
                 continue
 
-            prompt_expenses(database, year=month.year, month=month.month)
+            enter_expenses(database, year=month.year, month=month.month)
 
 
 if __name__ == "__main__":
