@@ -10,6 +10,7 @@ from budgeteer.database import Database
 from budgeteer.prompt_expenses import prompt_expenses
 from budgeteer.prompts.main_menu_options import MainMenuOptions
 from budgeteer.prompts.main_meny import main_menu
+from budgeteer.prompts.month_selection import month_selection
 
 
 def data_dir() -> Path:
@@ -61,7 +62,11 @@ def main():
                 database.export(csv_path)
             break
         elif option == MainMenuOptions.add_expenses:
-            prompt_expenses(database)
+            month = month_selection(database)
+            if not month:
+                continue
+
+            prompt_expenses(database, year=month.year, month=month.month)
 
 
 if __name__ == "__main__":

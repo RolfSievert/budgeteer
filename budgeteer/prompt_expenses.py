@@ -7,6 +7,7 @@ from prompt_toolkit.validation import ValidationError, Validator
 from budgeteer.database import Database
 from budgeteer.models.category import Category
 from budgeteer.models.expense import Expense
+from budgeteer.prompts.validators.date_validator import DateValidator
 from budgeteer.str_utils import str_to_date
 
 
@@ -27,17 +28,6 @@ class NonEmptyValidator(Validator):
             raise ValidationError(message="Entry cannot have trailing whitespace")
 
 
-class DateValidator(Validator):
-    def validate(self, document):
-        text = document.text
-
-        try:
-            date.strptime(text, "%Y-%m-%d")  # ty:ignore[unresolved-attribute]
-        except ValueError:
-            raise ValidationError(
-                message="Date has to be on the format '1994-01-09' (year-month-day)"
-            )
-
 class PriceValidator(Validator):
     def validate(self, document):
         text = document.text
@@ -48,6 +38,7 @@ class PriceValidator(Validator):
             raise ValidationError(
                 message="Invalid price format. Some valid examples: 11.0, 5, 0.1, -20"
             )
+
 
 def prompt_category(database: Database, default: int | None = None) -> Category:
     categories = database.get_categories()
@@ -85,6 +76,7 @@ def prompt_date(year: int, month: int, day: int) -> date:
 
     return date
 
+
 def prompt_price() -> float:
     res = prompt(
         "Enter a price: ",
@@ -92,6 +84,7 @@ def prompt_price() -> float:
     )
 
     return float(res)
+
 
 def create_expense(database: Database, year: int, month: int, day: int) -> Expense:
     expenses = database.get_expenses()
@@ -138,13 +131,7 @@ def prompt_expense(database: Database, year: int, month: int, day: int) -> Expen
     return expense
 
 
-def prompt_expenses(database: Database) -> None:
-    year_prompt = prompt("Enter year: ", default=f"{date.today().year}")
-    year = int(year_prompt)
-
-    month_prompt = prompt("Enter month: ", default=f"{date.today().month}")
-    month = int(month_prompt)
-
+def prompt_expenses(database: Database, year: int, month: int) -> None:
     day = 0
 
     while True:
