@@ -15,11 +15,10 @@ from budgeteer.prompts.validators.price_validator import PriceValidator
 from budgeteer.str_utils import str_to_date
 
 
-def expenses_summary(database: Database, year: int, month: int) -> str:
-    expenses = database.get_expenses()
-    expenses = (e for e in expenses if e.year == year and e.month == month)
-    expenses = sorted(expenses, key=lambda e: e.date())
-    return "\n".join(str(e) for e in expenses)
+def expenses_summary(expenses: list[Expense], year: int, month: int) -> str:
+    monthly_expenses = (e for e in expenses if e.year == year and e.month == month)
+    monthly_expenses = sorted(monthly_expenses, key=lambda e: e.date())
+    return "\n".join(str(e) for e in monthly_expenses)
 
 
 def summary_window(summary: str) -> widgets.Label:
@@ -199,7 +198,7 @@ def prompt_day(year: int, month: int, day: int, summary: str) -> date:
     return app.run()
 
 
-def prompt_expense_price(summary: str) -> float | int:
+def prompt_price(summary: str) -> float | int:
     kb = KeyBindings()
 
     big_window = summary_window(summary)
@@ -269,13 +268,12 @@ def prompt_expense_price(summary: str) -> float | int:
 
 
 def prompt_expense_name(
-    database: Database, summary: str
+    expenses: list[Expense], summary: str
 ) -> tuple[str, int | None] | None:
     kb = KeyBindings()
 
     big_window = summary_window(summary)
 
-    expenses = database.get_expenses()
     expense_names = list({expense.name for expense in expenses})
     prompt_window = widgets.TextArea(
         multiline=False,
@@ -330,8 +328,10 @@ def enter_expenses(database: Database, year: int, month: int) -> None:
     day = 0
 
     while True:
-        summary = expenses_summary(database, year=year, month=month)
-        expense_category = prompt_expense_name(database, summary=summary)
+        expenses = database.get_expenses()
+
+        summary = expenses_summary(expenses, year=year, month=month)
+        expense_category = prompt_expense_name(expenses, summary=summary)
         # exit if expense name was None
         if not expense_category:
             return
@@ -339,7 +339,7 @@ def enter_expenses(database: Database, year: int, month: int) -> None:
         expense_name = expense_category[0]
         category_id = expense_category[1]
 
-        expense_price = prompt_expense_price(summary=summary)
+        expense_price = prompt_price(summary=summary)
         expense_date = prompt_day(year=year, month=month, day=day, summary=summary)
         expense_category = prompt_category(
             database, default=category_id, summary=summary
