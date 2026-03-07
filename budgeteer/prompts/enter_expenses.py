@@ -4,7 +4,7 @@ from prompt_toolkit import Application, widgets
 from prompt_toolkit.completion import WordCompleter
 from prompt_toolkit.document import Document
 from prompt_toolkit.key_binding import KeyBindings, KeyPressEvent
-from prompt_toolkit.layout import HSplit, Layout
+from prompt_toolkit.layout import Container, HSplit, Layout, VSplit
 
 from budgeteer.database import Database
 from budgeteer.models.category import Category
@@ -12,7 +12,38 @@ from budgeteer.models.expense import Expense
 from budgeteer.prompts.validators.date_validator import DateValidator
 from budgeteer.prompts.validators.non_empty_validator import NonEmptyValidator
 from budgeteer.prompts.validators.price_validator import PriceValidator
-from budgeteer.str_utils import str_to_date
+from budgeteer.str_utils import date_to_str, str_to_date
+
+
+def expense_row(expense: Expense, category: Category | None) -> VSplit:
+    def str_or_empty(text: str | None) -> str:
+        return f"{text}" if text else ""
+
+    separator = widgets.Label(" | ", dont_extend_height=True, dont_extend_width=True)
+    return VSplit(
+        [
+            widgets.Label(date_to_str(expense.date()), width=10, wrap_lines=False),
+            separator,
+            widgets.Label(
+                str_or_empty(category.name if category is not None else None), width=16
+            ),
+            separator,
+            widgets.Label(str(expense.price), width=8, wrap_lines=False),
+            separator,
+            widgets.Label(expense.name, wrap_lines=True, dont_extend_width=False),
+        ]
+    )
+
+
+def expenses_table(expenses: list[Expense], categories: dict[int, Category]) -> HSplit:
+    return HSplit(
+        [
+            expense_row(
+                e, categories[e.category_id] if e.category_id is not None else None
+            )
+            for e in expenses
+        ]
+    )
 
 
 def expenses_summary(expenses: list[Expense], year: int, month: int) -> str:
@@ -21,16 +52,10 @@ def expenses_summary(expenses: list[Expense], year: int, month: int) -> str:
     return "\n".join(str(e) for e in monthly_expenses)
 
 
-def summary_window(summary: str) -> widgets.Label:
-    return widgets.Label(summary, dont_extend_height=False)
-
-
 def prompt_category(
-    database: Database, default: int | None, summary: str
+    database: Database, default: int | None, summary: Container
 ) -> Category | None:
     kb = KeyBindings()
-
-    big_window = summary_window(summary)
 
     categories = database.get_categories()
     default_category = next((x.name for x in categories if x.id == default), "")
@@ -49,7 +74,7 @@ def prompt_category(
     layout = Layout(
         HSplit(
             [
-                big_window,
+                summary,
                 widgets.Frame(body=prompt_window),
                 status_bar,
             ]
@@ -85,10 +110,8 @@ def prompt_category(
     return app.run()
 
 
-def prompt_day(year: int, month: int, day: int, summary: str) -> date:
+def prompt_day(year: int, month: int, day: int, summary: Container) -> date:
     kb = KeyBindings()
-
-    big_window = summary_window(summary)
 
     def str_or_empty(num: int | None) -> str:
         return f"{num}" if num else ""
@@ -107,7 +130,7 @@ def prompt_day(year: int, month: int, day: int, summary: str) -> date:
     layout = Layout(
         HSplit(
             [
-                big_window,
+                summary,
                 widgets.Frame(body=prompt_window),
                 status_bar,
             ]
@@ -198,10 +221,8 @@ def prompt_day(year: int, month: int, day: int, summary: str) -> date:
     return app.run()
 
 
-def prompt_price(summary: str) -> float | int:
+def prompt_price(summary: Container) -> float | int:
     kb = KeyBindings()
-
-    big_window = summary_window(summary)
 
     prompt_window = widgets.TextArea(
         multiline=False,
@@ -214,7 +235,7 @@ def prompt_price(summary: str) -> float | int:
     layout = Layout(
         HSplit(
             [
-                big_window,
+                summary,
                 widgets.Frame(body=prompt_window),
                 status_bar,
             ]
@@ -268,11 +289,9 @@ def prompt_price(summary: str) -> float | int:
 
 
 def prompt_expense_name(
-    expenses: list[Expense], summary: str
+    expenses: list[Expense], summary: Container
 ) -> tuple[str, int | None] | None:
     kb = KeyBindings()
-
-    big_window = summary_window(summary)
 
     expense_names = list({expense.name for expense in expenses})
     prompt_window = widgets.TextArea(
@@ -287,7 +306,7 @@ def prompt_expense_name(
     layout = Layout(
         HSplit(
             [
-                big_window,
+                summary,
                 widgets.Frame(body=prompt_window),
                 status_bar,
             ]
@@ -328,9 +347,14 @@ def enter_expenses(database: Database, year: int, month: int) -> None:
     day = 0
 
     while True:
-        expenses = database.get_expenses()
+        expenses = [
+            e for e in database.get_expenses() if e.year == year and e.month == month
+        ]
+        expenses = sorted(expenses, key=lambda e: e.date())
+        categories = database.get_categories()
+        category_map = {c.id: c for c in categories}
 
-        summary = expenses_summary(expenses, year=year, month=month)
+        summary = expenses_table(expenses, category_map)
         expense_category = prompt_expense_name(expenses, summary=summary)
         # exit if expense name was None
         if not expense_category:
