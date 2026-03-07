@@ -26,7 +26,7 @@ def summary_window(summary: str) -> widgets.Label:
     return widgets.Label(summary, dont_extend_height=False)
 
 
-def prompt_expense_category(
+def prompt_category(
     database: Database, default: int | None, summary: str
 ) -> Category | None:
     kb = KeyBindings()
@@ -42,6 +42,8 @@ def prompt_expense_category(
         completer=WordCompleter([x.name for x in categories]),
         text=default_category,
     )
+    prompt_window.buffer.cursor_right(len(prompt_window.text))
+
     default_status = " Use [Tab] for completion. Press [Escape] to exit."
     status_bar = widgets.Label(default_status)
 
@@ -84,7 +86,7 @@ def prompt_expense_category(
     return app.run()
 
 
-def prompt_expense_date(year: int, month: int, day: int, summary: str) -> date:
+def prompt_day(year: int, month: int, day: int, summary: str) -> date:
     kb = KeyBindings()
 
     big_window = summary_window(summary)
@@ -95,9 +97,11 @@ def prompt_expense_date(year: int, month: int, day: int, summary: str) -> date:
     prompt_window = widgets.TextArea(
         multiline=False,
         dont_extend_height=True,
-        prompt="Date: ",
-        text=f"{(f'{year}-{month}-{str_or_empty(day)}' if month else f'{year}-') if year else ''}",
+        prompt=f"Date: {year}-{month}-",
+        text=str_or_empty(day),
     )
+    prompt_window.buffer.cursor_right(len(prompt_window.text))
+
     default_status = " Enter a price"
     status_bar = widgets.Label(default_status)
 
@@ -113,12 +117,13 @@ def prompt_expense_date(year: int, month: int, day: int, summary: str) -> date:
 
     @kb.add("enter")
     def submit(event: KeyPressEvent):
+        text = f"{year}-{month}-{prompt_window.text}"
         try:
-            DateValidator().validate(Document(prompt_window.text))
+            DateValidator().validate(Document(text))
         except Exception as e:
             status_bar.text = str(e)
 
-        event.app.exit(result=str_to_date(prompt_window.text))
+        event.app.exit(result=str_to_date(text))
 
     @kb.add("escape")
     @kb.add("c-c")
@@ -146,6 +151,42 @@ def prompt_expense_date(year: int, month: int, day: int, summary: str) -> date:
     @kb.add("backspace")
     def erase(event: KeyPressEvent):
         prompt_window.text = prompt_window.text[:-1]
+        prompt_window.buffer.cursor_right(len(prompt_window.text))
+        status_bar.text = default_status
+
+    @kb.add("up")
+    @kb.add("k")
+    def up(event: KeyPressEvent):
+        if not prompt_window.text:
+            prompt_window.text = "1"
+            prompt_window.buffer.cursor_right(len(prompt_window.text))
+            return
+
+        num = int(prompt_window.text)
+        if num >= 31:
+            num = 1
+        else:
+            num += 1
+
+        prompt_window.text = str(num)
+        prompt_window.buffer.cursor_right(len(prompt_window.text))
+        status_bar.text = default_status
+
+    @kb.add("down")
+    @kb.add("j")
+    def down(event: KeyPressEvent):
+        if not prompt_window.text:
+            prompt_window.text = "31"
+            prompt_window.buffer.cursor_right(len(prompt_window.text))
+            return
+
+        num = int(prompt_window.text)
+        if num <= 1:
+            num = 31
+        else:
+            num -= 1
+
+        prompt_window.text = str(num)
         prompt_window.buffer.cursor_right(len(prompt_window.text))
         status_bar.text = default_status
 
@@ -299,10 +340,8 @@ def enter_expenses(database: Database, year: int, month: int) -> None:
         category_id = expense_category[1]
 
         expense_price = prompt_expense_price(summary=summary)
-        expense_date = prompt_expense_date(
-            year=year, month=month, day=day, summary=summary
-        )
-        expense_category = prompt_expense_category(
+        expense_date = prompt_day(year=year, month=month, day=day, summary=summary)
+        expense_category = prompt_category(
             database, default=category_id, summary=summary
         )
 
