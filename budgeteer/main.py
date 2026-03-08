@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 # vim:fenc=utf-8
 import argparse
+from datetime import datetime
 from pathlib import Path
 
 from platformdirs import PlatformDirs
@@ -39,10 +40,10 @@ def main():
         help="override database path",
     )
     parser.add_argument(
-        "--sync-csv-on-exit",
+        "--backup-dir",
         default=None,
         type=Path,
-        help="save data to a csv upon exit",
+        help="Export a backup csv of the database in target directory upon exit",
     )
 
     args = parser.parse_args()
@@ -50,10 +51,13 @@ def main():
     if args.reminder:
         print("TODO")
 
+    export_dir: Path = args.backup_dir
+    if not export_dir.is_dir():
+        raise RuntimeError(f"Export dir '{export_dir}' does not exist")
+
     db_path: Path = args.database_path
     # create the db path if it does not exist already
     db_path.parent.mkdir(parents=True, exist_ok=True)
-    csv_path = args.sync_csv_on_exit
 
     database = Database(db_path)
 
@@ -61,8 +65,6 @@ def main():
         option = main_menu(db=database)
 
         if option == MainMenuOptions.quit or option is None:
-            if csv_path:
-                database.export(csv_path)
             break
         elif option == MainMenuOptions.add_expenses:
             month = month_selection(database)
@@ -90,6 +92,12 @@ def main():
                     edit_expenses(database, year=month.year, month=month.month)
 
                 month_action = month_menu(database, year=month.year, month=month.month)
+
+    if export_dir:
+        csv_path = (
+            export_dir / f"expenses-{datetime.now().strftime('%Y-%m-%d-%H-%M-%S')}.csv"
+        )
+        database.export_expenses_to_csv(csv_path)
 
 
 if __name__ == "__main__":

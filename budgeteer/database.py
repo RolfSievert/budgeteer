@@ -1,3 +1,4 @@
+import csv
 import sqlite3
 from datetime import date, datetime
 from pathlib import Path
@@ -262,5 +263,24 @@ class Database:
 
         return expense
 
-    def export(self, csv_path: Path) -> None:
-        print("not implemented")
+    def export_expenses_to_csv(self, csv_path: Path) -> bool:
+        expenses = self.get_expenses()
+        category_map = {c.id: c.name for c in self.get_categories()}
+
+        expenses_dicts = [e.to_sql() for e in expenses]
+
+        for d in expenses_dicts:
+            category_id = d["category_id"]
+            if category_id is not None:
+                d["category"] = category_map[category_id]
+            d.pop("category_id")
+
+        with open(csv_path, "x", newline="") as f:
+            writer = csv.DictWriter(
+                f, delimiter=";", fieldnames=expenses_dicts[0].keys()
+            )
+
+            writer.writeheader()
+            writer.writerows(expenses_dicts)
+
+        return True
