@@ -229,5 +229,38 @@ class Database:
 
         return expense._replace(category_id=category_id)
 
+    def update_expense(self, expense: Expense) -> Expense:
+        self.connection.row_factory = None
+        cursor = self.connection.cursor()
+
+        cursor.execute(
+            f"""
+            UPDATE {Expense.table_name()}
+            SET
+                name = ?,
+                price = ?,
+                year = ?,
+                month = ?,
+                day = ?,
+                description = ?,
+                category_id = ?
+            WHERE id = ?
+            """,
+            (
+                expense.name,
+                expense.price,
+                expense.year,
+                expense.month,
+                expense.day,
+                expense.description,
+                expense.category_id,
+                expense.id,
+            ),
+        )
+
+        self.connection.commit()
+
+        return expense
+
     def export(self, csv_path: Path) -> None:
         print("not implemented")

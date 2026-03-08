@@ -3,24 +3,24 @@ from prompt_toolkit.key_binding import KeyBindings, KeyPressEvent
 from prompt_toolkit.layout import HSplit, Layout
 
 from budgeteer.database import Database
-from budgeteer.prompts.main_menu_options import MainMenuOptions
+from budgeteer.prompts.month_menu_options import MonthMenuOptions
+from budgeteer.widgets.expenses_table import expenses_table
 
 
-def main_menu(db: Database) -> MainMenuOptions | None:
-    add_expenses_option = (MainMenuOptions.add_expenses, "add expenses")
-    edit_month_option = (MainMenuOptions.edit_month, "view/edit month")
-    quit_option = (MainMenuOptions.quit, "quit")
+def month_menu(db: Database, year: int, month: int) -> MonthMenuOptions | None:
+    add_expenses_option = (MonthMenuOptions.add_expenses, "add expenses")
+    edit_expenses_option = (MonthMenuOptions.edit_expenses, "edit expenses")
+    exit_menu_option = (MonthMenuOptions.exit_menu, "exit menu")
 
     descriptions = {
-        MainMenuOptions.add_expenses: "Select a month to add expenses to",
-        MainMenuOptions.edit_month: "Select a month to edit",
-        MainMenuOptions.quit: "Exit the application",
+        MonthMenuOptions.add_expenses: "Add expenses to this month",
+        MonthMenuOptions.edit_expenses: "Edit this months expenses",
+        MonthMenuOptions.exit_menu: "Exit menu",
     }
 
     kb = KeyBindings()
 
-    big_window = widgets.Label("hello", dont_extend_height=False)
-    options = [add_expenses_option, edit_month_option, quit_option]
+    options = [add_expenses_option, edit_expenses_option, exit_menu_option]
     prompt_window = widgets.RadioList(
         options,
         select_on_focus=True,
@@ -70,10 +70,12 @@ def main_menu(db: Database) -> MainMenuOptions | None:
         status_bar.text = " " + descriptions[prompt_window.current_value]
         return True
 
+    expenses = [e for e in db.get_expenses() if e.year == year and e.month == month]
+    categories = {c.id: c for c in db.get_categories()}
     layout = Layout(
         HSplit(
             [
-                big_window,
+                expenses_table(expenses=expenses, categories=categories),
                 widgets.Frame(body=prompt_window),
                 status_bar,
             ]

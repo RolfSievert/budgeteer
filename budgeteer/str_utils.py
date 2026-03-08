@@ -1,8 +1,10 @@
 from datetime import date, datetime
 
+__date_format = "%Y-%m-%d"
+
 
 def str_to_date(time: str) -> date | None:
-    formats = ["%Y-%m-%d", date.isoformat]
+    formats = [__date_format, date.isoformat]
 
     for format in formats:
         try:
@@ -14,7 +16,7 @@ def str_to_date(time: str) -> date | None:
 
 
 def date_to_str(time: date) -> str:
-    return time.isoformat()
+    return time.strftime(__date_format)
 
 
 def str_to_time(time: str) -> datetime:

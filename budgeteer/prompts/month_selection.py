@@ -14,7 +14,7 @@ def month_selection(db: Database) -> date | None:
     """
     Which month was selected and if it is a new month
     """
-    months = list({f"{e.year}-{e.month}" for e in db.get_expenses()})
+    months = list({e.date().strftime("%Y-%m") for e in db.get_expenses()})
     months = sorted(months)
 
     kb = KeyBindings()
