@@ -11,6 +11,7 @@ class Expense(NamedTuple):
     month: int
     day: int
     category_id: int | None
+    description: str | None
     created_at: datetime
     id: int = -1  # id is -1 if not added to the database
 
@@ -30,6 +31,7 @@ class Expense(NamedTuple):
             "month": self.month,
             "day": self.day,
             "category_id": self.category_id,
+            "description": self.description,
         }
 
     def sql_values(self) -> str:
@@ -57,4 +59,5 @@ def expense_from_sql(sql: dict) -> Expense:
         month=sql["month"],
         day=sql["day"],
         category_id=sql["category_id"],
+        description=sql["description"],
     )

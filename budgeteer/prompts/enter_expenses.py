@@ -1,10 +1,11 @@
 from datetime import date, datetime
+from typing import NamedTuple
 
 from prompt_toolkit import Application, widgets
 from prompt_toolkit.completion import WordCompleter
 from prompt_toolkit.document import Document
 from prompt_toolkit.key_binding import KeyBindings, KeyPressEvent
-from prompt_toolkit.layout import Container, HSplit, Layout, VSplit
+from prompt_toolkit.layout import Container, HSplit, Layout
 
 from budgeteer.database import Database
 from budgeteer.models.category import Category
@@ -12,44 +13,8 @@ from budgeteer.models.expense import Expense
 from budgeteer.prompts.validators.date_validator import DateValidator
 from budgeteer.prompts.validators.non_empty_validator import NonEmptyValidator
 from budgeteer.prompts.validators.price_validator import PriceValidator
-from budgeteer.str_utils import date_to_str, str_to_date
-
-
-def expense_row(expense: Expense, category: Category | None) -> VSplit:
-    def str_or_empty(text: str | None) -> str:
-        return f"{text}" if text else ""
-
-    separator = widgets.Label(" | ", dont_extend_height=True, dont_extend_width=True)
-    return VSplit(
-        [
-            widgets.Label(date_to_str(expense.date()), width=10, wrap_lines=False),
-            separator,
-            widgets.Label(
-                str_or_empty(category.name if category is not None else None), width=16
-            ),
-            separator,
-            widgets.Label(str(expense.price), width=8, wrap_lines=False),
-            separator,
-            widgets.Label(expense.name, wrap_lines=True, dont_extend_width=False),
-        ]
-    )
-
-
-def expenses_table(expenses: list[Expense], categories: dict[int, Category]) -> HSplit:
-    return HSplit(
-        [
-            expense_row(
-                e, categories[e.category_id] if e.category_id is not None else None
-            )
-            for e in expenses
-        ]
-    )
-
-
-def expenses_summary(expenses: list[Expense], year: int, month: int) -> str:
-    monthly_expenses = (e for e in expenses if e.year == year and e.month == month)
-    monthly_expenses = sorted(monthly_expenses, key=lambda e: e.date())
-    return "\n".join(str(e) for e in monthly_expenses)
+from budgeteer.str_utils import str_to_date
+from budgeteer.widgets.expenses_table import expenses_table
 
 
 def prompt_category(
@@ -288,48 +253,81 @@ def prompt_price(summary: Container) -> float | int:
     return app.run()
 
 
+class ExpenseNameResult(NamedTuple):
+    name: str
+    description: str | None
+    category_id: int | None
+
+
 def prompt_expense_name(
     expenses: list[Expense], summary: Container
-) -> tuple[str, int | None] | None:
+) -> ExpenseNameResult | None:
     kb = KeyBindings()
 
     expense_names = list({expense.name for expense in expenses})
-    prompt_window = widgets.TextArea(
+    name_prompt = widgets.TextArea(
         multiline=False,
         dont_extend_height=True,
         prompt="Expense name: ",
         completer=WordCompleter(expense_names),
     )
-    default_status = " Use [Tab] for completion. Press [Escape] to exit."
+    description_prompt = widgets.TextArea(
+        multiline=False,
+        dont_extend_height=True,
+        prompt="Description: ",
+        completer=WordCompleter(expense_names),
+    )
+    default_status = " Use [Tab] for completion. Press [Escape] to exit. Press [Tab] or use arrows to enter description"
     status_bar = widgets.Label(default_status)
 
     layout = Layout(
         HSplit(
             [
                 summary,
-                widgets.Frame(body=prompt_window),
+                widgets.Frame(body=HSplit([name_prompt, description_prompt])),
                 status_bar,
             ]
         )
     )
 
+    layout.focus(name_prompt)
+
+    @kb.add("tab")
+    @kb.add("s-tab")
+    @kb.add("up")
+    @kb.add("down")
+    def change_focus(event: KeyPressEvent):
+        if layout.has_focus(description_prompt):
+            layout.focus(name_prompt)
+        elif layout.has_focus(name_prompt):
+            layout.focus(description_prompt)
+
     @kb.add("enter")
     def submit(event: KeyPressEvent):
         try:
-            NonEmptyValidator().validate(Document(prompt_window.text))
+            NonEmptyValidator().validate(Document(name_prompt.text))
         except Exception as e:
             status_bar.text = str(e)
             return
 
-        matches = [x for x in expenses if x.name == prompt_window.text]
+        matches = [x for x in expenses if x.name == name_prompt.text]
         latest_expense = max(
             matches,
             key=lambda e: e.created_at,
             default=None,
         )
         category = latest_expense.category_id if latest_expense else None
+        description = (
+            description_prompt.text.strip() if description_prompt.text.strip() else None
+        )
 
-        event.app.exit(result=(prompt_window.text, category))
+        event.app.exit(
+            result=ExpenseNameResult(
+                name=name_prompt.text,
+                description=description,
+                category_id=category,
+            )
+        )
 
     @kb.add("escape")
     @kb.add("c-c")
@@ -355,23 +353,20 @@ def enter_expenses(database: Database, year: int, month: int) -> None:
         category_map = {c.id: c for c in categories}
 
         summary = expenses_table(expenses, category_map)
-        expense_category = prompt_expense_name(expenses, summary=summary)
+        expense = prompt_expense_name(expenses, summary=summary)
         # exit if expense name was None
-        if not expense_category:
+        if not expense:
             return
-
-        expense_name = expense_category[0]
-        category_id = expense_category[1]
 
         expense_price = prompt_price(summary=summary)
         expense_date = prompt_day(year=year, month=month, day=day, summary=summary)
         expense_category = prompt_category(
-            database, default=category_id, summary=summary
+            database, default=expense.category_id, summary=summary
         )
 
         database.new_expense(
             Expense(
-                name=expense_name,
+                name=expense.name,
                 price=expense_price,
                 year=expense_date.year,
                 month=expense_date.month,
@@ -380,6 +375,7 @@ def enter_expenses(database: Database, year: int, month: int) -> None:
                 if expense_category is not None
                 else None,
                 created_at=datetime.now(),
+                description=expense.description,
             )
         )
         day = expense_date.day

@@ -2,7 +2,11 @@ import sqlite3
 from datetime import date, datetime
 from pathlib import Path
 
-from budgeteer.migrations import v1_add_category, v2_add_expense
+from budgeteer.migrations import (
+    v1_add_category,
+    v2_add_expense,
+    v3_add_expense_description,
+)
 from budgeteer.models.category import Category, category_from_sql
 from budgeteer.models.expense import Expense, expense_from_sql
 
@@ -95,6 +99,7 @@ class Database:
         migrations = [
             v1_add_category.add_category_migration(),
             v2_add_expense.add_expense_migration(),
+            v3_add_expense_description.add_description_migration(),
         ]
 
         for migration in sorted(migrations, key=lambda x: x.version):

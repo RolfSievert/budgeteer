@@ -27,8 +27,10 @@ def month_selection(db: Database) -> date | None:
         multiline=False,
         dont_extend_height=True,
         prompt="Enter a month: ",
+        text=date.today().strftime("%Y-%m"),
         completer=WordCompleter(months),
     )
+    prompt_window.buffer.cursor_right(len(prompt_window.text))
     default_status = " Select an existing month or enter a new month 'year-month'"
     status_bar = widgets.Label(default_status)
 
