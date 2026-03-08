@@ -2,8 +2,7 @@ from sqlite3 import Connection
 
 
 class Migration:
-    def __init__(self, version: int, description: str, up: str, down: str):
-        self.version = version
+    def __init__(self, description: str, up: str, down: str):
         self.description = description
         self._up = up
         self._down = down

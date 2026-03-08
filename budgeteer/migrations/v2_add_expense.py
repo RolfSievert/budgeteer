@@ -3,7 +3,6 @@ from .migration import Migration
 
 def add_expense_migration() -> Migration:
     return Migration(
-        version=2,
         description="Create the expenses table",
         up="""
         CREATE TABLE expenses(

@@ -93,20 +93,26 @@ class Database:
             print("Initializing database (only happens with a new database)")
             self._initialize()
 
-        version = self._get_version()
+        db_version = self._get_version()
 
-        # NOTE: these must be in order!
+        # WARNING: migrations must stay in order!
         migrations = [
             v1_add_category.add_category_migration(),
             v2_add_expense.add_expense_migration(),
             v3_add_expense_description.add_description_migration(),
         ]
 
-        for migration in sorted(migrations, key=lambda x: x.version):
-            if migration.version > version:
+        if db_version > len(migrations):
+            raise RuntimeError(
+                "Database is newer than budgeteer, please update budgeteer to the latest version"
+            )
+
+        for i, migration in enumerate(migrations):
+            m_version = i + 1
+            if m_version > db_version:
                 print(f"Applied migration: {migration.description}")
                 migration.up(self.connection)
-                self._set_version(migration.version)
+                self._set_version(m_version)
             else:
                 break
 

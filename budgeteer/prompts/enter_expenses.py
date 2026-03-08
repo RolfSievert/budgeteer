@@ -277,7 +277,7 @@ def prompt_expense_name(
         prompt="Description: ",
         completer=WordCompleter(expense_names),
     )
-    default_status = " Use [Tab] for completion. Press [Escape] to exit. Press [Tab] or use arrows to enter description"
+    default_status = " Use [Tab] for completion. Press [Escape] to exit. Press [Up/Down/CTRL+K/CTRL+J] to enter description"
     status_bar = widgets.Label(default_status)
 
     layout = Layout(
@@ -292,8 +292,8 @@ def prompt_expense_name(
 
     layout.focus(name_prompt)
 
-    @kb.add("tab")
-    @kb.add("s-tab")
+    @kb.add("c-j")
+    @kb.add("c-k")
     @kb.add("up")
     @kb.add("down")
     def change_focus(event: KeyPressEvent):
@@ -345,15 +345,14 @@ def enter_expenses(database: Database, year: int, month: int) -> None:
     day = 0
 
     while True:
-        expenses = [
-            e for e in database.get_expenses() if e.year == year and e.month == month
-        ]
+        all_expenses = database.get_expenses()
+        expenses = [e for e in all_expenses if e.year == year and e.month == month]
         expenses = sorted(expenses, key=lambda e: e.date())
         categories = database.get_categories()
         category_map = {c.id: c for c in categories}
 
         summary = expenses_table(expenses, category_map)
-        expense = prompt_expense_name(expenses, summary=summary)
+        expense = prompt_expense_name(all_expenses, summary=summary)
         # exit if expense name was None
         if not expense:
             return
