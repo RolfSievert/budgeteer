@@ -262,7 +262,6 @@ def edit_expense(
         if not date:
             raise RuntimeError(f"Could not parse {date_str} as date")
 
-        print("submit 6")
         event.app.exit(
             result=Expense(
                 id=expense.id,
