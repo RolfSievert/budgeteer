@@ -48,18 +48,15 @@ def prompt_category(
 
     @kb.add("enter")
     def submit(event: KeyPressEvent):
-        try:
-            NonEmptyValidator().validate(Document(prompt_window.text))
-        except Exception as e:
-            status_bar.text = str(e)
+        text = prompt_window.text.strip() if prompt_window.text.strip() else None
+        if text is None:
+            event.app.exit(result=None)
             return
 
-        category = next((x for x in categories if x.name == prompt_window.text), None)
+        category = next((x for x in categories if x.name == text), None)
         if category is None:
             category = database.new_category(
-                Category(
-                    name=prompt_window.text, description="", created_at=datetime.now()
-                )
+                Category(name=text, description="", created_at=datetime.now())
             )
         event.app.exit(result=category)
 

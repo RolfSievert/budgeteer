@@ -129,6 +129,9 @@ class Database:
 
         return [category_from_sql(e) for e in result.fetchall()]
 
+    def get_category_map(self) -> dict[int, Category]:
+        return {c.id: c for c in self.get_categories()}
+
     def get_category(self, id: int) -> Category:
         self.connection.row_factory = sqlite3.Row
         cursor = self.connection.cursor()

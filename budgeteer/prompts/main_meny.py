@@ -4,6 +4,7 @@ from prompt_toolkit.layout import HSplit, Layout
 
 from budgeteer.database import Database
 from budgeteer.prompts.main_menu_options import MainMenuOptions
+from budgeteer.widgets.yearly_summary import yearly_summary
 
 
 def main_menu(db: Database) -> MainMenuOptions | None:
@@ -19,7 +20,6 @@ def main_menu(db: Database) -> MainMenuOptions | None:
 
     kb = KeyBindings()
 
-    big_window = widgets.Label("hello", dont_extend_height=False)
     options = [add_expenses_option, edit_month_option, quit_option]
     prompt_window = widgets.RadioList(
         options,
@@ -73,7 +73,10 @@ def main_menu(db: Database) -> MainMenuOptions | None:
     layout = Layout(
         HSplit(
             [
-                big_window,
+                yearly_summary(
+                    expenses=db.get_expenses(),
+                    category_map=db.get_category_map(),
+                ),
                 widgets.Frame(body=prompt_window),
                 status_bar,
             ]

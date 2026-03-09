@@ -51,10 +51,6 @@ def main():
     if args.reminder:
         print("TODO")
 
-    export_dir: Path = args.backup_dir
-    if not export_dir.is_dir():
-        raise RuntimeError(f"Export dir '{export_dir}' does not exist")
-
     db_path: Path = args.database_path
     # create the db path if it does not exist already
     db_path.parent.mkdir(parents=True, exist_ok=True)
@@ -92,6 +88,10 @@ def main():
                     edit_expenses(database, year=month.year, month=month.month)
 
                 month_action = month_menu(database, year=month.year, month=month.month)
+
+    export_dir: Path = args.backup_dir
+    # create the export path if it does not exist already
+    export_dir.mkdir(parents=True, exist_ok=True)
 
     if export_dir:
         csv_path = (
