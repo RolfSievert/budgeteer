@@ -1,6 +1,13 @@
 # Budgeteer
 
-[short summary of what this is]
+A little helper to keep your budget :)
+
+Features:
+- Tab-completion of expense names
+- Automatic category assignment
+- Yearly breakdown
+- Monthly breakdown
+- Automatic CSV export
 
 ## Installation
 
