@@ -5,46 +5,13 @@ from prompt_toolkit.layout import Container, HSplit, VSplit
 
 from budgeteer.models.category import Category
 from budgeteer.models.expense import Expense
-
-
-def expenses_by_month(expenses: list[Expense]) -> dict[date, list[Expense]]:
-    res: dict[date, list[Expense]] = {}
-
-    for e in expenses:
-        month = date(e.year, e.month, 1)
-        if month not in res:
-            res[month] = []
-        res[month].append(e)
-
-    return res
+from budgeteer.widgets.utils.category_costs import category_costs
+from budgeteer.widgets.utils.expenses_by_month import Month, expenses_by_month
+from budgeteer.widgets.utils.signed import signed
 
 
 def sum_price(expenses: list[Expense]) -> float:
-
-    total = 0
-    for e in expenses:
-        total += e.price
-
-    return total
-
-
-def signed(value: float) -> str:
-    if value > 0:
-        return f"+{str(value)}"
-    elif value < 0:
-        return str(value)
-    else:
-        return f"±{value}"
-
-
-def category_costs(expenses: list[Expense]) -> dict[int | None, float]:
-    costs: dict[int | None, float] = {}
-    for e in expenses:
-        if e.category_id not in costs:
-            costs[e.category_id] = 0
-        costs[e.category_id] += e.price
-
-    return costs
+    return sum(e.price for e in expenses)
 
 
 def yearly_summary(
@@ -66,7 +33,7 @@ def yearly_summary(
         )
 
     total = 0
-    latest_month: date = next(iter(months.keys()))
+    latest_month: Month = next(iter(months.keys()))
     for m in months:
         s = sum_price(months[m])
         total += s
@@ -100,7 +67,12 @@ def yearly_summary(
             total_without_last / (month_count - 1) if month_count > 1 else average
         )
         diff = average - average_without_last
-        return f"uncategorized {int(average)}({signed(int(diff))})"
+        name = (
+            category_map[category_id].name
+            if category_id is not None
+            else "uncategorized"
+        )
+        return f"{name} {int(average)}({signed(int(diff))})"
 
     category_strings = [
         category_summary(k, v)
@@ -167,6 +139,5 @@ def yearly_summary(
                     body=widgets.Label(category_text, dont_extend_height=True),
                 ),
             ),
-            widgets.Label("", dont_extend_height=False),
         ]
     )

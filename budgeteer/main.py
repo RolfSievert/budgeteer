@@ -29,7 +29,7 @@ def main():
     )
 
     parser.add_argument(
-        "--reminder",
+        "--monthly-reminder",
         default="1 month;1st",
         help="prompt the user to enter expenses if due",
     )
@@ -48,7 +48,7 @@ def main():
 
     args = parser.parse_args()
 
-    if args.reminder:
+    if args.monthly_reminder:
         print("TODO")
 
     db_path: Path = args.database_path

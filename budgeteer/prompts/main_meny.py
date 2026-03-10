@@ -4,6 +4,7 @@ from prompt_toolkit.layout import HSplit, Layout
 
 from budgeteer.database import Database
 from budgeteer.prompts.main_menu_options import MainMenuOptions
+from budgeteer.widgets.monthly_summary import monthly_summaries
 from budgeteer.widgets.yearly_summary import yearly_summary
 
 
@@ -70,13 +71,18 @@ def main_menu(db: Database) -> MainMenuOptions | None:
         status_bar.text = " " + descriptions[prompt_window.current_value]
         return True
 
+    expenses = db.get_expenses()
+    category_map = db.get_category_map()
+
     layout = Layout(
         HSplit(
             [
                 yearly_summary(
-                    expenses=db.get_expenses(),
-                    category_map=db.get_category_map(),
+                    expenses=expenses,
+                    category_map=category_map,
                 ),
+                monthly_summaries(expenses=expenses, category_map=category_map),
+                widgets.Label("", dont_extend_height=False),
                 widgets.Frame(body=prompt_window),
                 status_bar,
             ]

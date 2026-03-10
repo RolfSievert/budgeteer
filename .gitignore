@@ -6,5 +6,6 @@ budgeteer/migrations/__pycache__/
 budgeteer/models/__pycache__/
 budgeteer/prompts/__pycache__/
 budgeteer/widgets/__pycache__/
+budgeteer/widgets/utils/__pycache__/
 budgeteer/prompts/validators/__pycache__/
 test
