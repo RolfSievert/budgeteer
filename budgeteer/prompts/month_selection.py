@@ -7,20 +7,21 @@ from prompt_toolkit.key_binding import KeyBindings, KeyPressEvent
 from prompt_toolkit.layout import HSplit, Layout
 
 from budgeteer.database import Database
+from budgeteer.models.month import Month, parse_month
 from budgeteer.prompts.validators.month_validator import MonthValidator
 
 
-def month_selection(db: Database) -> date | None:
+def month_selection(db: Database) -> Month | None:
     """
     Which month was selected and if it is a new month
     """
-    months = list({e.date().strftime("%Y-%m") for e in db.get_expenses()})
-    months = sorted(months)
+    months = sorted({e.year_month() for e in db.get_expenses()})
+    month_strings = [m.format("%Y-%m") for m in months]
 
     kb = KeyBindings()
 
     newline = "\n"
-    months_summary = "Previous months:\n - " + (newline + " - ").join(months)
+    months_summary = "Previous months:\n - " + (newline + " - ").join(month_strings)
 
     big_window = widgets.Label(months_summary, dont_extend_height=False)
     prompt_window = widgets.TextArea(
@@ -28,7 +29,7 @@ def month_selection(db: Database) -> date | None:
         dont_extend_height=True,
         prompt="Enter a month: ",
         text=date.today().strftime("%Y-%m"),
-        completer=WordCompleter(months),
+        completer=WordCompleter(month_strings),
     )
     prompt_window.buffer.cursor_right(len(prompt_window.text))
     default_status = " Select an existing month or enter a new month 'year-month'"
@@ -38,7 +39,7 @@ def month_selection(db: Database) -> date | None:
     def submit(event: KeyPressEvent):
         try:
             MonthValidator().validate(Document(prompt_window.text))
-            month = date.strptime(prompt_window.text, "%Y-%m")  # ty:ignore[unresolved-attribute]
+            month = parse_month(prompt_window.text, "%Y-%m")
             event.app.exit(result=month)
         except Exception as e:
             status_bar.text = str(e)

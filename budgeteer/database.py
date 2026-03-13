@@ -3,13 +3,13 @@ import sqlite3
 from datetime import date, datetime
 from pathlib import Path
 
+from budgeteer.entities.category import Category, category_from_sql
+from budgeteer.entities.expense import Expense, expense_from_sql
 from budgeteer.migrations import (
     v1_add_category,
     v2_add_expense,
     v3_add_expense_description,
 )
-from budgeteer.models.category import Category, category_from_sql
-from budgeteer.models.expense import Expense, expense_from_sql
 
 
 class Database:

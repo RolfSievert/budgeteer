@@ -7,8 +7,8 @@ from prompt_toolkit.key_binding import KeyBindings, KeyPressEvent
 from prompt_toolkit.layout import Container, HSplit, Layout
 
 from budgeteer.database import Database
-from budgeteer.models.category import Category
-from budgeteer.models.expense import Expense
+from budgeteer.entities.category import Category
+from budgeteer.entities.expense import Expense
 from budgeteer.prompts.validators.date_validator import DateValidator
 from budgeteer.prompts.validators.int_validator import IntValidator
 from budgeteer.prompts.validators.non_empty_validator import NonEmptyValidator
@@ -38,7 +38,7 @@ def select_expense(db: Database, expenses: list[Expense]) -> int | None:
     layout = Layout(
         HSplit(
             [
-                expenses_table(expenses, category_map),
+                expenses_table(expenses, category_map, indexed=True),
                 widgets.Frame(body=prompt_window),
                 status_bar,
             ]
@@ -51,8 +51,14 @@ def select_expense(db: Database, expenses: list[Expense]) -> int | None:
             IntValidator().validate(Document(prompt_window.text))
         except Exception as e:
             status_bar.text = str(e)
+            return
 
-        event.app.exit(result=int(prompt_window.text))
+        index = int(prompt_window.text) - 1
+        if index not in range(len(expenses)):
+            status_bar.text = f"Index {index + 1} out of range"
+            return
+
+        event.app.exit(result=index)
 
     @kb.add("escape")
     @kb.add("c-c")

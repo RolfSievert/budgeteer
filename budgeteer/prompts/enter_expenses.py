@@ -8,8 +8,8 @@ from prompt_toolkit.key_binding import KeyBindings, KeyPressEvent
 from prompt_toolkit.layout import Container, HSplit, Layout
 
 from budgeteer.database import Database
-from budgeteer.models.category import Category
-from budgeteer.models.expense import Expense
+from budgeteer.entities.category import Category
+from budgeteer.entities.expense import Expense
 from budgeteer.prompts.validators.date_validator import DateValidator
 from budgeteer.prompts.validators.non_empty_validator import NonEmptyValidator
 from budgeteer.prompts.validators.price_validator import PriceValidator

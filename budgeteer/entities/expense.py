@@ -1,6 +1,7 @@
 from datetime import date, datetime
 from typing import NamedTuple
 
+from budgeteer.models.month import Month
 from budgeteer.str_utils import str_to_time
 
 
@@ -16,7 +17,10 @@ class Expense(NamedTuple):
     id: int = -1  # id is -1 if not added to the database
 
     def date(self) -> date:
-        return date(self.year, self.month, self.day)
+        return date(year=self.year, month=self.month, day=self.day)
+
+    def year_month(self) -> Month:
+        return Month(year=self.year, month=self.month)
 
     def __str__(self) -> str:
         return f"{self.__class__.__name__}(id={self.id}, created_at={self.created_at}, name={self.name}, price={self.price}, category_id={self.category_id})"

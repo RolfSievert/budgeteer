@@ -1,4 +1,4 @@
-from budgeteer.models.expense import Expense
+from budgeteer.entities.expense import Expense
 
 
 def category_costs(expenses: list[Expense]) -> dict[int | None, float]:

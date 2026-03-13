@@ -1,8 +1,8 @@
 from prompt_toolkit import widgets
 from prompt_toolkit.layout import HSplit, VSplit
 
-from budgeteer.models.category import Category
-from budgeteer.models.expense import Expense
+from budgeteer.entities.category import Category
+from budgeteer.entities.expense import Expense
 from budgeteer.widgets.utils.category_costs import category_costs
 from budgeteer.widgets.utils.expenses_by_month import Month, expenses_by_month
 from budgeteer.widgets.utils.signed import signed
