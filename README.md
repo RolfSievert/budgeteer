@@ -3,11 +3,17 @@
 A little helper to keep your budget :)
 
 Features:
+- Fullscreen command-line interface
 - Tab-completion of expense names
 - Automatic category assignment
 - Yearly breakdown
 - Monthly breakdown
 - Automatic CSV export
+
+TODO:
+- custom start/end of month
+- editable categories
+- categorize uncategorize expenses
 
 ## Installation
 
@@ -42,6 +48,3 @@ Python packages
 ## Usage
 
 Install the package and run `budgeteer --help` to see available commands.
-
-### Examples
-
