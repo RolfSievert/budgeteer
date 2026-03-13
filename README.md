@@ -13,7 +13,7 @@ Features:
 TODO:
 - custom start/end of month
 - editable categories
-- categorize uncategorize expenses
+- new view to categorize uncategorized expenses
 
 ## Installation
 
