@@ -3,7 +3,7 @@
 A little helper to keep your budget :)
 
 Features:
-- Fullscreen command-line interface
+- Full screen command-line interface
 - Tab-completion of expense names
 - Automatic category assignment
 - Yearly breakdown
