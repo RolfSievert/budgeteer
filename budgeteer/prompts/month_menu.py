@@ -73,7 +73,7 @@ def month_menu(db: Database, year: int, month: int) -> MonthMenuOptions | None:
         return True
 
     start = date(year, month, 1)
-    before = date(year + (month + 1) // 12, (month + 1) % 12, 1)
+    before = date(year + (month) // 12, (month) % 12 + 1, 1)
     expenses = db.get_expenses(start=start, before=before)
     categories = {c.id: c for c in db.get_categories()}
     layout = Layout(
