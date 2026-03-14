@@ -230,6 +230,7 @@ def prompt_price(summary: Container) -> float | int:
     @kb.add("8")
     @kb.add("9")
     @kb.add(".")
+    @kb.add("-")
     def number(event: KeyPressEvent):
         prompt_window.text += event.data
         prompt_window.buffer.cursor_right(len(prompt_window.text))
