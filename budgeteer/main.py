@@ -89,9 +89,10 @@ def main():
 
                 month_action = month_menu(database, year=month.year, month=month.month)
 
-    export_dir: Path = args.backup_dir
+    export_dir: Path | None = args.backup_dir
     # create the export path if it does not exist already
-    export_dir.mkdir(parents=True, exist_ok=True)
+    if export_dir:
+        export_dir.mkdir(parents=True, exist_ok=True)
 
     if export_dir:
         csv_path = (
