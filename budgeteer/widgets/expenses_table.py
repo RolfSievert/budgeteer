@@ -96,7 +96,8 @@ def expenses_table(
 ) -> HSplit:
     column_widths = ExpenseColumnWidths(
         indices=max(
-            max(len(str(i)) for i in range(len(expenses))), len(__index_header)
+            max(len(str(i)) for i in range(len(expenses) if expenses else 1)),
+            len(__index_header),
         ),
         category=max(
             len(__category_header),
