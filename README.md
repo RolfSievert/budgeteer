@@ -1,38 +1,47 @@
 # Budgeteer
 
-A little helper to keep your budget :)
+> A little helper to keep your budget :)
 
-Features:
-- Full screen command-line interface
-- Tab-completion of expense names
-- Automatic category assignment
-- Yearly breakdown
-- Monthly breakdown
-- Automatic CSV export
+---
 
-TODO:
-- monthly reminders
-- custom start/end of month
-- import from csv
-- editable categories
-- new view to categorize uncategorized expenses
+## ✨ Features
+- 🖥️ **Full-screen** command-line interface
+- ⌨️ **Tab completion** for expense names & categories
+- 🏷️ **Auto categorize** repeated expenses
+- 📊 **Yearly** and **monthly** breakdowns
+- 📤 **CSV export**
 
-## Installation
+---
 
-### Arch linux
+## 🚧 TODO
+- Monthly reminders
+- Custom start-of-month day
+- CSV import
+- Editable categories
+- Uncategorized expenses view
 
-Two options:
-1. Run `just install-arch` to install using pacman. (requires [just](https://github.com/casey/just))
-2. Run the following code
+---
+
+## 📦 Installation
+
+### Arch Linux (via `pacman`)
+
+**Option 1: Just**
+```bash
+just install-arch
+```
+*(requires [just](https://github.com/casey/just))*
+
+**Option 2: Manual**
 ```bash
 python3 -m build
 makepkg --syncdeps --force --clean
-sudo pacman -U budgeteer-*-x86_64.pkg.tar.zst
+sudo pacman -U budgeteer-*.pkg.tar.zst
 ```
 
-### Using pip
+### Universal (pip/pipx)
 
-I recommend installing with [pipx](https://github.com/pypa/pipx), and it is used just like pip is used.
+I recommend installing with [pipx](https://github.com/pypa/pipx), and it is used just like pip.
 ```bash
 python3 -m build
 pipx install .
@@ -40,13 +49,20 @@ pipx install .
 
 but if you want to, you can exchange `pipx` with `pip`.
 
+---
+
 ## Requirements
 
-Python packages
 - `prompt_toolkit`
 - `platformdirs`
-- `sqlite3`
+- `sqlite3` (built-in)
+
+---
 
 ## Usage
 
-Install the package and run `budgeteer --help` to see available commands.
+```bash
+budgeteer --help
+```
+
+Run **`budgeteer`** after installation to start using it.
