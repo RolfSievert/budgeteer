@@ -1,8 +1,7 @@
 # Budgeteer
 
-> A little helper to keep your budget :)
+A little helper to keep your budget :)
 
----
 
 ## ✨ Features
 - 🖥️ **Full-screen** command-line interface
@@ -10,27 +9,17 @@
 - 🏷️ **Auto categorize** repeated expenses
 - 📊 **Yearly** and **monthly** breakdowns
 - 📤 **CSV export**
+- 💾 **Backed by SQLite**
 
----
-
-## 🚧 TODO
-- Monthly reminders
-- Custom start-of-month day
-- CSV import
-- Editable categories
-- Uncategorized expenses view
-
----
 
 ## 📦 Installation
 
 ### Arch Linux (via `pacman`)
 
-**Option 1: Just**
+**Option 1: (requires [just](https://github.com/casey/just))**
 ```bash
 just install-arch
 ```
-*(requires [just](https://github.com/casey/just))*
 
 **Option 2: Manual**
 ```bash
@@ -49,15 +38,12 @@ pipx install .
 
 but if you want to, you can exchange `pipx` with `pip`.
 
----
 
 ## Requirements
 
 - `prompt_toolkit`
 - `platformdirs`
-- `sqlite3` (built-in)
 
----
 
 ## Usage
 
@@ -66,3 +52,11 @@ budgeteer --help
 ```
 
 Run **`budgeteer`** after installation to start using it.
+
+
+## 🚧 TODO
+- Monthly reminders
+- Custom start-of-month day
+- CSV import
+- Editable categories
+- Uncategorized expenses view
