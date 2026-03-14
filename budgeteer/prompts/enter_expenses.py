@@ -2,7 +2,7 @@ from datetime import date, datetime
 from typing import NamedTuple
 
 from prompt_toolkit import Application, widgets
-from prompt_toolkit.completion import WordCompleter
+from prompt_toolkit.completion import FuzzyCompleter, WordCompleter
 from prompt_toolkit.document import Document
 from prompt_toolkit.key_binding import KeyBindings, KeyPressEvent
 from prompt_toolkit.layout import Container, HSplit, Layout
@@ -266,7 +266,7 @@ def prompt_expense_name(
         multiline=False,
         dont_extend_height=True,
         prompt="Expense name: ",
-        completer=WordCompleter(expense_names),
+        completer=FuzzyCompleter(WordCompleter(expense_names, sentence=True)),
         text=default or "",
     )
     name_prompt.buffer.cursor_right(len(name_prompt.text))

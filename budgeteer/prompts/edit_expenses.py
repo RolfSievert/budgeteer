@@ -1,7 +1,7 @@
 from datetime import datetime
 
 from prompt_toolkit import Application, widgets
-from prompt_toolkit.completion import WordCompleter
+from prompt_toolkit.completion import FuzzyCompleter, WordCompleter
 from prompt_toolkit.document import Document
 from prompt_toolkit.key_binding import KeyBindings, KeyPressEvent
 from prompt_toolkit.layout import Container, HSplit, Layout
@@ -147,7 +147,7 @@ def edit_expense(
         multiline=False,
         dont_extend_height=True,
         prompt="Expense name: ",
-        completer=WordCompleter(expense_names),
+        completer=FuzzyCompleter(WordCompleter(expense_names, sentence=True)),
         text=expense.name,
     )
     name_prompt.buffer.cursor_right(len(name_prompt.text))
