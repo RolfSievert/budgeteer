@@ -38,7 +38,7 @@ def select_expense(db: Database, expenses: list[Expense]) -> int | None:
     layout = Layout(
         HSplit(
             [
-                expenses_table(expenses, category_map, indexed=True),
+                expenses_table(expenses, category_map, indexed=True, kb=kb),
                 widgets.Frame(body=prompt_window),
                 status_bar,
             ]
@@ -128,7 +128,9 @@ def select_expense(db: Database, expenses: list[Expense]) -> int | None:
     def swallow_keypress(event: KeyPressEvent):
         pass
 
-    app = Application(full_screen=True, key_bindings=kb, layout=layout)
+    app = Application(
+        full_screen=True, key_bindings=kb, layout=layout, mouse_support=True
+    )
 
     return app.run()
 
@@ -139,8 +141,9 @@ def edit_expense(
     all_expenses: list[Expense],
     categories: list[Category],
     summary: Container,
+    kb: KeyBindings | None = None,
 ) -> Expense | None:
-    kb = KeyBindings()
+    kb = KeyBindings() if kb is None else kb
 
     expense_names = list({expense.name for expense in all_expenses})
     name_prompt = widgets.TextArea(
@@ -289,7 +292,9 @@ def edit_expense(
     def quit(event: KeyPressEvent):
         event.app.exit(result=None)
 
-    app = Application(full_screen=True, key_bindings=kb, layout=layout)
+    app = Application(
+        full_screen=True, key_bindings=kb, layout=layout, mouse_support=True
+    )
 
     return app.run()
 
@@ -312,12 +317,14 @@ def edit_expenses(db: Database, year: int, month: int):
         categories = db.get_categories()
         category_map = {c.id: c for c in categories}
 
+        kb = KeyBindings()
         updated_expense = edit_expense(
             db,
             expense=expenses[expense_index],
             all_expenses=all_expenses,
             categories=categories,
-            summary=expenses_table(expenses=expenses, categories=category_map),
+            summary=expenses_table(expenses=expenses, categories=category_map, kb=kb),
+            kb=kb,
         )
         if updated_expense:
             db.update_expense(updated_expense)

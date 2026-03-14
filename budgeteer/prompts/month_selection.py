@@ -3,7 +3,12 @@ from datetime import date
 from prompt_toolkit import Application, widgets
 from prompt_toolkit.document import Document
 from prompt_toolkit.key_binding import KeyBindings, KeyPressEvent
-from prompt_toolkit.layout import HSplit, Layout
+from prompt_toolkit.layout import (
+    HSplit,
+    Layout,
+    ScrollablePane,
+    to_container,
+)
 
 from budgeteer.database import Database
 from budgeteer.models.month import Month, parse_month
@@ -80,14 +85,16 @@ def month_selection(db: Database) -> Month | None:
     layout = Layout(
         HSplit(
             [
-                big_window,
+                ScrollablePane(to_container(big_window)),
                 widgets.Frame(body=prompt_window),
                 status_bar,
             ]
         )
     )
 
-    app = Application(full_screen=True, key_bindings=kb, layout=layout)
+    app = Application(
+        full_screen=True, key_bindings=kb, layout=layout, mouse_support=True
+    )
 
     result = app.run()
 

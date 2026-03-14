@@ -1,7 +1,14 @@
 from typing import NamedTuple
 
 from prompt_toolkit import widgets
-from prompt_toolkit.layout import Container, HSplit, VSplit, WindowAlign
+from prompt_toolkit.key_binding import KeyBindings, KeyPressEvent
+from prompt_toolkit.layout import (
+    Container,
+    HSplit,
+    ScrollablePane,
+    VSplit,
+    WindowAlign,
+)
 
 from budgeteer.entities.category import Category
 from budgeteer.entities.expense import Expense
@@ -97,8 +104,11 @@ def table_header(column_widths: ExpenseColumnWidths, indexed: bool) -> VSplit:
 
 
 def expenses_table(
-    expenses: list[Expense], categories: dict[int, Category], indexed: bool = False
-) -> HSplit:
+    expenses: list[Expense],
+    categories: dict[int, Category],
+    kb: KeyBindings,
+    indexed: bool = False,
+) -> Container:
     column_widths = ExpenseColumnWidths(
         indices=max(
             max(len(str(i)) for i in range(len(expenses) if expenses else 1)),
@@ -134,8 +144,30 @@ def expenses_table(
             )
         )
 
+    scrollable_pane = ScrollablePane(
+        HSplit(rows),
+    )
+
+    def scroll_up(event: KeyPressEvent):
+        scrollable_pane.vertical_scroll = max(scrollable_pane.vertical_scroll - 1, 0)
+
+    def scroll_down(event: KeyPressEvent):
+        scrollable_pane.vertical_scroll = min(
+            scrollable_pane.vertical_scroll + 1, len(expenses) - 1
+        )
+
+    kb.add("c-up")(scroll_up)
+    kb.add("c-down")(scroll_down)
+
     return HSplit(
-        [table_header(column_widths, indexed=indexed), widgets.HorizontalLine()]
-        + rows
-        + [widgets.Label("", dont_extend_height=False)]
+        [
+            widgets.Label(
+                "Press [CTRL+Up] and [CTRL+Down] to scroll",
+                align=WindowAlign.RIGHT,
+                dont_extend_height=True,
+            ),
+            table_header(column_widths, indexed=indexed),
+            widgets.HorizontalLine(),
+            scrollable_pane,
+        ]
     )

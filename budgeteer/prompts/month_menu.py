@@ -75,14 +75,16 @@ def month_menu(db: Database, year: int, month: int) -> MonthMenuOptions | None:
     layout = Layout(
         HSplit(
             [
-                expenses_table(expenses=expenses, categories=categories),
+                expenses_table(expenses=expenses, categories=categories, kb=kb),
                 widgets.Frame(body=prompt_window),
                 status_bar,
             ]
         )
     )
 
-    app = Application(full_screen=True, key_bindings=kb, layout=layout)
+    app = Application(
+        full_screen=True, key_bindings=kb, layout=layout, mouse_support=True
+    )
 
     result = app.run()
 

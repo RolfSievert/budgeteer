@@ -18,9 +18,9 @@ from budgeteer.widgets.expenses_table import expenses_table
 
 
 def prompt_category(
-    database: Database, default: int | None, summary: Container
+    database: Database, default: int | None, summary: Container, kb: KeyBindings | None
 ) -> Category | None:
-    kb = KeyBindings()
+    kb = KeyBindings() if kb is None else kb
 
     categories = database.get_categories()
     default_category = next((x.name for x in categories if x.id == default), "")
@@ -67,13 +67,17 @@ def prompt_category(
     def quit(event: KeyPressEvent):
         event.app.exit(result=None)
 
-    app = Application(full_screen=True, key_bindings=kb, layout=layout)
+    app = Application(
+        full_screen=True, key_bindings=kb, layout=layout, mouse_support=True
+    )
 
     return app.run()
 
 
-def prompt_day(year: int, month: int, day: int, summary: Container) -> date | None:
-    kb = KeyBindings()
+def prompt_day(
+    year: int, month: int, day: int, summary: Container, kb: KeyBindings | None
+) -> date | None:
+    kb = KeyBindings() if kb is None else kb
 
     def str_or_empty(num: int | None) -> str:
         return f"{num}" if num else ""
@@ -178,13 +182,17 @@ def prompt_day(year: int, month: int, day: int, summary: Container) -> date | No
     def swallow_keypress(event: KeyPressEvent):
         pass
 
-    app = Application(full_screen=True, key_bindings=kb, layout=layout)
+    app = Application(
+        full_screen=True, key_bindings=kb, layout=layout, mouse_support=True
+    )
 
     return app.run()
 
 
-def prompt_price(summary: Container, default: str | None) -> float | int | None:
-    kb = KeyBindings()
+def prompt_price(
+    summary: Container, default: str | None, kb: KeyBindings | None
+) -> float | int | None:
+    kb = KeyBindings() if kb is None else kb
 
     prompt_window = widgets.TextArea(
         multiline=False, dont_extend_height=True, prompt="Price: ", text=default or ""
@@ -245,7 +253,9 @@ def prompt_price(summary: Container, default: str | None) -> float | int | None:
     def swallow_keypress(event: KeyPressEvent):
         pass
 
-    app = Application(full_screen=True, key_bindings=kb, layout=layout)
+    app = Application(
+        full_screen=True, key_bindings=kb, layout=layout, mouse_support=True
+    )
 
     return app.run()
 
@@ -257,9 +267,12 @@ class ExpenseNameResult(NamedTuple):
 
 
 def prompt_expense_name(
-    expenses: list[Expense], summary: Container, default: str | None = None
+    expenses: list[Expense],
+    summary: Container,
+    default: str | None = None,
+    kb: KeyBindings | None = None,
 ) -> ExpenseNameResult | None:
-    kb = KeyBindings()
+    kb = KeyBindings() if kb is None else kb
 
     expense_names = list({expense.name for expense in expenses})
     name_prompt = widgets.TextArea(
@@ -334,7 +347,9 @@ def prompt_expense_name(
     def quit(event: KeyPressEvent):
         event.app.exit(result=None)
 
-    app = Application(full_screen=True, key_bindings=kb, layout=layout)
+    app = Application(
+        full_screen=True, key_bindings=kb, layout=layout, mouse_support=True
+    )
 
     return app.run()
 
@@ -349,7 +364,15 @@ def enter_expenses(database: Database, year: int, month: int) -> None:
         categories = database.get_categories()
         category_map = {c.id: c for c in categories}
 
-        summary = expenses_table(expenses, category_map)
+        kb = KeyBindings()
+        summary = expenses_table(expenses, category_map, kb=kb)
+        expense_table_bindings = list(kb.bindings)
+
+        def reset_bindings():
+            nonlocal kb
+            kb.bindings.clear()
+            for b in expense_table_bindings:
+                kb.bindings.append(b)
 
         expense: ExpenseNameResult | None = None
         expense_price: float | None = None
@@ -361,26 +384,36 @@ def enter_expenses(database: Database, year: int, month: int) -> None:
             and expense_price is not None
             and expense_date is not None
         ):
+            reset_bindings()
             expense = prompt_expense_name(
-                all_expenses, summary=summary, default=expense.name if expense else None
+                all_expenses,
+                summary=summary,
+                default=expense.name if expense else None,
+                kb=kb,
             )
             # exit if expense name was None
             if expense is None:
                 return
 
+            reset_bindings()
             expense_price = prompt_price(
                 summary=summary,
                 default=str(expense_price) if expense_price is not None else None,
+                kb=kb,
             )
             if expense_price is None:
                 continue
 
-            expense_date = prompt_day(year=year, month=month, day=day, summary=summary)
+            reset_bindings()
+            expense_date = prompt_day(
+                year=year, month=month, day=day, summary=summary, kb=kb
+            )
             if expense_date is None:
                 continue
 
+        reset_bindings()
         expense_category = prompt_category(
-            database, default=expense.category_id, summary=summary
+            database, default=expense.category_id, summary=summary, kb=kb
         )
 
         database.new_expense(

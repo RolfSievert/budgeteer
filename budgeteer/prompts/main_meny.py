@@ -1,6 +1,6 @@
 from prompt_toolkit import Application, widgets
 from prompt_toolkit.key_binding import KeyBindings, KeyPressEvent
-from prompt_toolkit.layout import HSplit, Layout
+from prompt_toolkit.layout import HSplit, Layout, ScrollablePane, WindowAlign
 
 from budgeteer.database import Database
 from budgeteer.prompts.main_menu_options import MainMenuOptions
@@ -74,7 +74,7 @@ def main_menu(db: Database) -> MainMenuOptions | None:
     expenses = db.get_expenses()
     category_map = db.get_category_map()
 
-    layout = Layout(
+    expenses_summary = ScrollablePane(
         HSplit(
             [
                 yearly_summary(
@@ -82,14 +82,37 @@ def main_menu(db: Database) -> MainMenuOptions | None:
                     category_map=category_map,
                 ),
                 monthly_summaries(expenses=expenses, category_map=category_map),
-                widgets.Label("", dont_extend_height=False),
+            ]
+        )
+    )
+
+    def scroll_up(event: KeyPressEvent):
+        expenses_summary.vertical_scroll = max(expenses_summary.vertical_scroll - 1, 0)
+
+    def scroll_down(event: KeyPressEvent):
+        expenses_summary.vertical_scroll += 1
+
+    kb.add("c-up")(scroll_up)
+    kb.add("c-down")(scroll_down)
+
+    layout = Layout(
+        HSplit(
+            [
+                widgets.Label(
+                    "Press [CTRL+Up] and [CTRL+Down] to scroll",
+                    align=WindowAlign.RIGHT,
+                    dont_extend_height=True,
+                ),
+                expenses_summary,
                 widgets.Frame(body=prompt_window),
                 status_bar,
             ]
         )
     )
 
-    app = Application(full_screen=True, key_bindings=kb, layout=layout)
+    app = Application(
+        full_screen=True, key_bindings=kb, layout=layout, mouse_support=True
+    )
 
     result = app.run()
 
