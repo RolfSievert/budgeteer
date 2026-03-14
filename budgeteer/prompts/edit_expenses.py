@@ -1,7 +1,6 @@
 from datetime import datetime
 
 from prompt_toolkit import Application, widgets
-from prompt_toolkit.completion import FuzzyCompleter, WordCompleter
 from prompt_toolkit.document import Document
 from prompt_toolkit.key_binding import KeyBindings, KeyPressEvent
 from prompt_toolkit.layout import Container, HSplit, Layout
@@ -9,6 +8,7 @@ from prompt_toolkit.layout import Container, HSplit, Layout
 from budgeteer.database import Database
 from budgeteer.entities.category import Category
 from budgeteer.entities.expense import Expense
+from budgeteer.prompts.completers.completers import fuzzy_sentence_completer
 from budgeteer.prompts.validators.date_validator import DateValidator
 from budgeteer.prompts.validators.int_validator import IntValidator
 from budgeteer.prompts.validators.non_empty_validator import NonEmptyValidator
@@ -147,7 +147,7 @@ def edit_expense(
         multiline=False,
         dont_extend_height=True,
         prompt="Expense name: ",
-        completer=FuzzyCompleter(WordCompleter(expense_names, sentence=True)),
+        completer=fuzzy_sentence_completer(expense_names),
         text=expense.name,
     )
     name_prompt.buffer.cursor_right(len(name_prompt.text))
@@ -176,7 +176,7 @@ def edit_expense(
         multiline=False,
         dont_extend_height=True,
         prompt="Category: ",
-        completer=WordCompleter([c.name for c in categories]),
+        completer=fuzzy_sentence_completer([c.name for c in categories]),
         text=next((c.name for c in categories if c.id == expense.category_id), ""),
     )
     category_prompt.buffer.cursor_right(len(category_prompt.text))

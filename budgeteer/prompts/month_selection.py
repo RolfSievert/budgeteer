@@ -1,13 +1,13 @@
 from datetime import date
 
 from prompt_toolkit import Application, widgets
-from prompt_toolkit.completion import WordCompleter
 from prompt_toolkit.document import Document
 from prompt_toolkit.key_binding import KeyBindings, KeyPressEvent
 from prompt_toolkit.layout import HSplit, Layout
 
 from budgeteer.database import Database
 from budgeteer.models.month import Month, parse_month
+from budgeteer.prompts.completers.completers import fuzzy_sentence_completer
 from budgeteer.prompts.validators.month_validator import MonthValidator
 
 
@@ -29,7 +29,7 @@ def month_selection(db: Database) -> Month | None:
         dont_extend_height=True,
         prompt="Enter a month: ",
         text=date.today().strftime("%Y-%m"),
-        completer=WordCompleter(month_strings),
+        completer=fuzzy_sentence_completer(month_strings),
     )
     prompt_window.buffer.cursor_right(len(prompt_window.text))
     default_status = " Select an existing month or enter a new month 'year-month'"

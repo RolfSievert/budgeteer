@@ -9,4 +9,5 @@ budgeteer/prompts/__pycache__/
 budgeteer/widgets/__pycache__/
 budgeteer/widgets/utils/__pycache__/
 budgeteer/prompts/validators/__pycache__/
+budgeteer/prompts/completers/__pycache__/
 test
