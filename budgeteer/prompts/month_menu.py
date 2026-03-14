@@ -1,3 +1,5 @@
+from datetime import date
+
 from prompt_toolkit import Application, widgets
 from prompt_toolkit.key_binding import KeyBindings, KeyPressEvent
 from prompt_toolkit.layout import HSplit, Layout
@@ -70,7 +72,9 @@ def month_menu(db: Database, year: int, month: int) -> MonthMenuOptions | None:
         status_bar.text = " " + descriptions[prompt_window.current_value]
         return True
 
-    expenses = [e for e in db.get_expenses() if e.year == year and e.month == month]
+    start = date(year, month, 1)
+    before = date(year + (month + 1) // 12, (month + 1) % 12, 1)
+    expenses = db.get_expenses(start=start, before=before)
     categories = {c.id: c for c in db.get_categories()}
     layout = Layout(
         HSplit(

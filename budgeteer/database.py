@@ -162,15 +162,50 @@ class Database:
 
         return category._replace(id=self._last_row_id(cursor))
 
-    def get_expenses(self) -> list[Expense]:
+    def get_expenses(
+        self, start: date | None = None, before: date | None = None
+    ) -> list[Expense]:
         self.connection.row_factory = sqlite3.Row
         cursor = self.connection.cursor()
 
-        result = cursor.execute(
-            f"""
-            SELECT * from {Expense.table_name()}
-            """
-        )
+        query = f"SELECT * FROM {Expense.table_name()}"
+        conditions = []
+        params = []
+
+        if start is not None:
+            conditions.append(
+                "(year > ? OR (year = ? AND month > ?) OR (year = ? AND month = ? AND day >= ?))"
+            )
+            params.extend(
+                [
+                    start.year,
+                    start.year,
+                    start.month,
+                    start.year,
+                    start.month,
+                    start.day,
+                ]
+            )
+
+        if before is not None:
+            conditions.append(
+                "(year < ? OR (year = ? AND month < ?) OR (year = ? AND month = ? AND day < ?))"
+            )
+            params.extend(
+                [
+                    before.year,
+                    before.year,
+                    before.month,
+                    before.year,
+                    before.month,
+                    before.day,
+                ]
+            )
+
+        if conditions:
+            query += " WHERE " + " AND ".join(conditions)
+
+        result = cursor.execute(query, params)
 
         return [expense_from_sql(e) for e in result.fetchall()]
 
