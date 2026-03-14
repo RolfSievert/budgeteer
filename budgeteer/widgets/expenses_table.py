@@ -1,7 +1,7 @@
 from typing import NamedTuple
 
 from prompt_toolkit import widgets
-from prompt_toolkit.layout import Container, HSplit, VSplit
+from prompt_toolkit.layout import Container, HSplit, VSplit, WindowAlign
 
 from budgeteer.entities.category import Category
 from budgeteer.entities.expense import Expense
@@ -36,7 +36,12 @@ def expense_row(
             width=column_widths.category,
         ),
         separator,
-        widgets.Label(str(expense.price), width=column_widths.price, wrap_lines=False),
+        widgets.Label(
+            str(expense.price),
+            width=column_widths.price,
+            wrap_lines=False,
+            align=WindowAlign.RIGHT,
+        ),
         separator,
         widgets.Label(expense.name, wrap_lines=True, width=column_widths.name),
         separator,
