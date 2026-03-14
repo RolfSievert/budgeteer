@@ -72,7 +72,7 @@ def prompt_category(
     return app.run()
 
 
-def prompt_day(year: int, month: int, day: int, summary: Container) -> date:
+def prompt_day(year: int, month: int, day: int, summary: Container) -> date | None:
     kb = KeyBindings()
 
     def str_or_empty(num: int | None) -> str:
@@ -183,14 +183,13 @@ def prompt_day(year: int, month: int, day: int, summary: Container) -> date:
     return app.run()
 
 
-def prompt_price(summary: Container) -> float | int:
+def prompt_price(summary: Container, default: str | None) -> float | int | None:
     kb = KeyBindings()
 
     prompt_window = widgets.TextArea(
-        multiline=False,
-        dont_extend_height=True,
-        prompt="Price: ",
+        multiline=False, dont_extend_height=True, prompt="Price: ", text=default or ""
     )
+    prompt_window.buffer.cursor_right(len(prompt_window.text))
     default_status = " Enter a price"
     status_bar = widgets.Label(default_status)
 
@@ -258,7 +257,7 @@ class ExpenseNameResult(NamedTuple):
 
 
 def prompt_expense_name(
-    expenses: list[Expense], summary: Container
+    expenses: list[Expense], summary: Container, default: str | None = None
 ) -> ExpenseNameResult | None:
     kb = KeyBindings()
 
@@ -268,7 +267,9 @@ def prompt_expense_name(
         dont_extend_height=True,
         prompt="Expense name: ",
         completer=WordCompleter(expense_names),
+        text=default or "",
     )
+    name_prompt.buffer.cursor_right(len(name_prompt.text))
     description_prompt = widgets.TextArea(
         multiline=False,
         dont_extend_height=True,
@@ -350,13 +351,35 @@ def enter_expenses(database: Database, year: int, month: int) -> None:
         category_map = {c.id: c for c in categories}
 
         summary = expenses_table(expenses, category_map)
-        expense = prompt_expense_name(all_expenses, summary=summary)
-        # exit if expense name was None
-        if not expense:
-            return
 
-        expense_price = prompt_price(summary=summary)
-        expense_date = prompt_day(year=year, month=month, day=day, summary=summary)
+        expense: ExpenseNameResult | None = None
+        expense_price: float | None = None
+        expense_date: date | None = None
+        expense_category: Category | None = None
+
+        while not (
+            expense is not None
+            and expense_price is not None
+            and expense_date is not None
+        ):
+            expense = prompt_expense_name(
+                all_expenses, summary=summary, default=expense.name if expense else None
+            )
+            # exit if expense name was None
+            if expense is None:
+                return
+
+            expense_price = prompt_price(
+                summary=summary,
+                default=str(expense_price) if expense_price is not None else None,
+            )
+            if expense_price is None:
+                continue
+
+            expense_date = prompt_day(year=year, month=month, day=day, summary=summary)
+            if expense_date is None:
+                continue
+
         expense_category = prompt_category(
             database, default=expense.category_id, summary=summary
         )
