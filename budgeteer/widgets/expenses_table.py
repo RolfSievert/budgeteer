@@ -158,9 +158,10 @@ def expenses_table(
                 dont_extend_height=True,
             ),
             widgets.Label(
-                table_header(column_widths, indexed=indexed), dont_extend_height=True
+                table_header(column_widths, indexed=indexed),
+                dont_extend_height=True,
+                style="reverse",
             ),
-            widgets.HorizontalLine(),
             scrollable_pane,
         ]
     )
