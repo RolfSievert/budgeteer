@@ -11,7 +11,9 @@ Features:
 - Automatic CSV export
 
 TODO:
+- monthly reminders
 - custom start/end of month
+- import from csv
 - editable categories
 - new view to categorize uncategorized expenses
 
