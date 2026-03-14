@@ -6,8 +6,8 @@ from prompt_toolkit.layout import (
     Container,
     HSplit,
     ScrollablePane,
-    VSplit,
     WindowAlign,
+    to_container,
 )
 
 from budgeteer.entities.category import Category
@@ -23,45 +23,42 @@ class ExpenseColumnWidths(NamedTuple):
     date: int = 10
 
 
+def __add_spaces(text: str, end_length: int, prefix: bool = False) -> str:
+    space_count = max(0, end_length - len(text))
+    if prefix:
+        return " " * space_count + text
+    else:
+        return text + " " * space_count
+
+
 def expense_row(
     expense: Expense,
     category: Category | None,
     column_widths: ExpenseColumnWidths,
     index: int | None = None,
-) -> VSplit:
+) -> str:
     def str_or_empty(text: str | None) -> str:
         return f"{text}" if text else ""
 
-    separator = widgets.Label(" | ", dont_extend_height=True, dont_extend_width=True)
-    row = [
-        widgets.Label(
-            date_to_str(expense.date()), width=column_widths.date, wrap_lines=False
-        ),
-        separator,
-        widgets.Label(
-            str_or_empty(category.name if category is not None else None),
-            width=column_widths.category,
-        ),
-        separator,
-        widgets.Label(
-            str(expense.price),
-            width=column_widths.price,
-            wrap_lines=False,
-            align=WindowAlign.RIGHT,
-        ),
-        separator,
-        widgets.Label(expense.name, wrap_lines=True, width=column_widths.name),
-        separator,
-        widgets.Label(expense.description, wrap_lines=True, dont_extend_width=False),
-    ]
+    separator = " │ "
+
+    row = separator.join(
+        [
+            __add_spaces(date_to_str(expense.date()), column_widths.date),
+            __add_spaces(
+                str_or_empty(category.name if category else None),
+                column_widths.category,
+            ),
+            __add_spaces(str(expense.price), column_widths.price, prefix=True),
+            __add_spaces(expense.name, column_widths.name),
+            str_or_empty(expense.description),
+        ]
+    )
 
     if index is not None:
-        row = [
-            widgets.Label(str(index), width=column_widths.indices, wrap_lines=False),
-            separator,
-        ] + row
+        row = __add_spaces(str(index), column_widths.indices) + separator + row
 
-    return VSplit(row)
+    return row
 
 
 __index_header = "INDEX"
@@ -72,35 +69,29 @@ __expense_header = "EXPENSE NAME"
 __description_header = "EXPENSE DESCRIPTION"
 
 
-def table_header(column_widths: ExpenseColumnWidths, indexed: bool) -> VSplit:
+def table_header(column_widths: ExpenseColumnWidths, indexed: bool) -> str:
     def str_or_empty(text: str | None) -> str:
         return f"{text}" if text else ""
 
-    separator = widgets.Label(" | ", dont_extend_height=True, dont_extend_width=True)
-    row = [
-        widgets.Label(__date_header, width=column_widths.date, wrap_lines=False),
-        separator,
-        widgets.Label(
-            __category_header,
-            width=column_widths.category,
-        ),
-        separator,
-        widgets.Label(__price_header, width=column_widths.price, wrap_lines=False),
-        separator,
-        widgets.Label(__expense_header, wrap_lines=True, width=column_widths.name),
-        separator,
-        widgets.Label(__description_header, wrap_lines=True, dont_extend_width=False),
-    ]
+    separator = " │ "
+
+    row = separator.join(
+        [
+            __add_spaces(__date_header, column_widths.date),
+            __add_spaces(
+                __category_header,
+                column_widths.category,
+            ),
+            __add_spaces(__price_header, column_widths.price),
+            __add_spaces(__expense_header, column_widths.name),
+            str_or_empty(__description_header),
+        ]
+    )
 
     if indexed:
-        row = [
-            widgets.Label(
-                __index_header, width=column_widths.indices, wrap_lines=False
-            ),
-            separator,
-        ] + row
+        row = __add_spaces(__index_header, column_widths.indices) + separator + row
 
-    return VSplit(row)
+    return row
 
 
 def expenses_table(
@@ -133,7 +124,7 @@ def expenses_table(
         ),
     )
 
-    rows: list[Container] = []
+    rows: list[str] = []
     for i, e in enumerate(expenses):
         rows.append(
             expense_row(
@@ -145,7 +136,7 @@ def expenses_table(
         )
 
     scrollable_pane = ScrollablePane(
-        HSplit(rows),
+        to_container(widgets.Label("\n".join(rows))),
     )
 
     def scroll_up(event: KeyPressEvent):
@@ -166,7 +157,9 @@ def expenses_table(
                 align=WindowAlign.RIGHT,
                 dont_extend_height=True,
             ),
-            table_header(column_widths, indexed=indexed),
+            widgets.Label(
+                table_header(column_widths, indexed=indexed), dont_extend_height=True
+            ),
             widgets.HorizontalLine(),
             scrollable_pane,
         ]
