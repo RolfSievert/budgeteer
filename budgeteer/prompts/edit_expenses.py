@@ -251,12 +251,12 @@ def edit_expense(
             return
 
         category_str = category_prompt.text.strip()
+        category_id: int | None = None
 
         if category_str:
             category_match = next(
                 (x for x in categories if x.name == category_str), None
             )
-            category_id: int
             if category_match is None:
                 category = database.new_category(
                     Category(
