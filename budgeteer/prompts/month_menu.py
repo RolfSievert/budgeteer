@@ -12,17 +12,24 @@ from budgeteer.widgets.expenses_table import expenses_table
 def month_menu(db: Database, year: int, month: int) -> MonthMenuOptions | None:
     add_expenses_option = (MonthMenuOptions.add_expenses, "add expenses")
     edit_expenses_option = (MonthMenuOptions.edit_expenses, "edit expenses")
+    delete_expenses_option = (MonthMenuOptions.delete_expenses, "delete expenses")
     exit_menu_option = (MonthMenuOptions.exit_menu, "exit menu")
 
     descriptions = {
         MonthMenuOptions.add_expenses: "Add expenses to this month",
-        MonthMenuOptions.edit_expenses: "Edit this months expenses",
+        MonthMenuOptions.edit_expenses: "Edit this month's expenses",
+        MonthMenuOptions.delete_expenses: "Select expenses from this month to delete",
         MonthMenuOptions.exit_menu: "Exit menu",
     }
 
     kb = KeyBindings()
 
-    options = [add_expenses_option, edit_expenses_option, exit_menu_option]
+    options = [
+        add_expenses_option,
+        edit_expenses_option,
+        delete_expenses_option,
+        exit_menu_option,
+    ]
     prompt_window = widgets.RadioList(
         options,
         select_on_focus=True,

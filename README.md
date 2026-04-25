@@ -60,3 +60,4 @@ Run **`budgeteer`** after installation to start using it.
 - CSV import
 - Editable categories
 - Uncategorized expenses view
+- When adding expenses, show fields that was previously entered (e.g. "Name" when entering "Price")

@@ -301,6 +301,20 @@ class Database:
 
         return expense
 
+    def delete_expense(self, expense_id: int) -> None:
+        self.connection.row_factory = None
+        cursor = self.connection.cursor()
+
+        cursor.execute(
+            f"""
+            DELETE FROM {Expense.table_name()}
+            WHERE id = ?
+            """,
+            (expense_id,),
+        )
+
+        self.connection.commit()
+
     def export_expenses_to_csv(self, csv_path: Path) -> bool:
         expenses = self.get_expenses()
         category_map = {c.id: c.name for c in self.get_categories()}

@@ -8,6 +8,7 @@ from pathlib import Path
 from platformdirs import PlatformDirs
 
 from budgeteer.database import Database
+from budgeteer.prompts.delete_expense import delete_expenses
 from budgeteer.prompts.edit_expenses import edit_expenses
 from budgeteer.prompts.enter_expenses import enter_expenses
 from budgeteer.prompts.main_menu_options import MainMenuOptions
@@ -73,6 +74,8 @@ def main():
                     enter_expenses(database, year=month.year, month=month.month)
                 if month_action == MonthMenuOptions.edit_expenses:
                     edit_expenses(database, year=month.year, month=month.month)
+                if month_action == MonthMenuOptions.delete_expenses:
+                    delete_expenses(database, year=month.year, month=month.month)
 
                 month_action = month_menu(database, year=month.year, month=month.month)
         elif option == MainMenuOptions.edit_month:
@@ -86,6 +89,8 @@ def main():
                     enter_expenses(database, year=month.year, month=month.month)
                 if month_action == MonthMenuOptions.edit_expenses:
                     edit_expenses(database, year=month.year, month=month.month)
+                if month_action == MonthMenuOptions.delete_expenses:
+                    delete_expenses(database, year=month.year, month=month.month)
 
                 month_action = month_menu(database, year=month.year, month=month.month)
 
