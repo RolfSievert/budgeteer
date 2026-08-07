@@ -104,11 +104,10 @@ def main():
         )
         database.export_expenses_to_csv(expenses_path)
 
-        config_path = (
-            export_dir
-            / f"user-config-{datetime.now().strftime('%Y-%m-%d-%H-%M-%S')}.csv"
+        metadata_path = (
+            export_dir / f"metadata-{datetime.now().strftime('%Y-%m-%d-%H-%M-%S')}.csv"
         )
-        database.export_user_config_to_csv(config_path)
+        database.export_metadata_to_csv(metadata_path)
 
 
 if __name__ == "__main__":

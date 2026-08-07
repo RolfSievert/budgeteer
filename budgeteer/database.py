@@ -5,12 +5,14 @@ from pathlib import Path
 
 from budgeteer.entities.category import Category, category_from_sql
 from budgeteer.entities.expense import Expense, expense_from_sql
+from budgeteer.entities.metadata import Metadata, metadata_from_sql
 from budgeteer.entities.user_config import UserConfig, user_config_from_sql
 from budgeteer.migrations import (
     v1_add_category,
     v2_add_expense,
     v3_add_expense_description,
     v4_add_user_config,
+    v5_add_metadata,
 )
 
 
@@ -104,6 +106,7 @@ class Database:
             v2_add_expense.add_expense_migration(),
             v3_add_expense_description.add_description_migration(),
             v4_add_user_config.add_user_config_migration(),
+            v5_add_metadata.add_metadata_migration(),
         ]
 
         if db_version >= len(migrations):
@@ -366,7 +369,7 @@ class Database:
         self.connection.row_factory = None
         cursor = self.connection.cursor()
 
-        user_config = UserConfig(None, None, None)
+        user_config = UserConfig(None, None)
         cursor.execute(
             f"""
             INSERT INTO {UserConfig.table_name()} VALUES({user_config.sql_values()})
@@ -386,12 +389,10 @@ class Database:
             UPDATE {UserConfig.table_name()}
             SET
                 backup_dir = ?,
-                start_page_note = ?,
                 db_path = ?
             """,
             (
                 user_config.backup_dir,
-                user_config.start_page_note,
                 user_config.db_path,
             ),
         )
@@ -400,13 +401,61 @@ class Database:
 
         return user_config
 
-    def export_user_config_to_csv(self, csv_path: Path) -> bool:
-        user_config = self.get_user_config().to_sql()
+    def get_metadata(self) -> Metadata:
+        self.connection.row_factory = sqlite3.Row
+        cursor = self.connection.cursor()
+
+        result = cursor.execute(
+            f"""
+            SELECT * from {Metadata.table_name()}
+            LIMIT 1
+            """
+        )
+
+        db_metadata = result.fetchone()
+
+        if db_metadata is not None:
+            return metadata_from_sql(db_metadata)
+
+        cursor.close()
+        self.connection.row_factory = None
+        cursor = self.connection.cursor()
+
+        metadata = Metadata(None)
+        cursor.execute(
+            f"""
+            INSERT INTO {Metadata.table_name()} VALUES({metadata.sql_values()})
+            """,
+            metadata.to_sql(),
+        )
+        self.connection.commit()
+
+        return metadata
+
+    def update_metadata(self, metadata: Metadata) -> Metadata:
+        self.connection.row_factory = None
+        cursor = self.connection.cursor()
+
+        cursor.execute(
+            f"""
+            UPDATE {Metadata.table_name()}
+            SET
+                start_page_note = ?
+            """,
+            (metadata.start_page_note,),
+        )
+
+        self.connection.commit()
+
+        return metadata
+
+    def export_metadata_to_csv(self, csv_path: Path) -> bool:
+        metadata = self.get_metadata().to_sql()
 
         with open(csv_path, "x", newline="") as f:
-            writer = csv.DictWriter(f, delimiter=";", fieldnames=user_config.keys())
+            writer = csv.DictWriter(f, delimiter=";", fieldnames=metadata.keys())
 
             writer.writeheader()
-            writer.writerows([user_config])
+            writer.writerows([metadata])
 
         return True

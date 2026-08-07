@@ -7,7 +7,6 @@ def add_user_config_migration() -> Migration:
         up="""
         CREATE TABLE user_config (
             backup_dir TEXT,
-            start_page_note TEXT,
             db_path TEXT
         )
         """,
