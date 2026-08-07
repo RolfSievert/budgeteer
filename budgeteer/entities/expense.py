@@ -1,4 +1,5 @@
-from datetime import date, datetime
+from datetime import date as ddate
+from datetime import datetime
 from typing import NamedTuple
 
 from budgeteer.models.month import Month
@@ -16,8 +17,8 @@ class Expense(NamedTuple):
     created_at: datetime
     id: int = -1  # id is -1 if not added to the database
 
-    def date(self) -> date:
-        return date(year=self.year, month=self.month, day=self.day)
+    def date(self) -> ddate:
+        return ddate(year=self.year, month=self.month, day=self.day)
 
     def year_month(self) -> Month:
         return Month(year=self.year, month=self.month)
@@ -42,7 +43,7 @@ class Expense(NamedTuple):
         """
         Returns placeholder names for the object, like ":id, :created_at, ..."
         """
-        prepended = [":" + tag for tag in self.to_sql().keys()]
+        prepended = [":" + tag for tag in self.to_sql()]
         return ", ".join(prepended)
 
     def table_name() -> str:

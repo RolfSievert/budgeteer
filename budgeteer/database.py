@@ -5,10 +5,12 @@ from pathlib import Path
 
 from budgeteer.entities.category import Category, category_from_sql
 from budgeteer.entities.expense import Expense, expense_from_sql
+from budgeteer.entities.user_config import UserConfig, user_config_from_sql
 from budgeteer.migrations import (
     v1_add_category,
     v2_add_expense,
     v3_add_expense_description,
+    v4_add_user_config,
 )
 
 
@@ -101,21 +103,25 @@ class Database:
             v1_add_category.add_category_migration(),
             v2_add_expense.add_expense_migration(),
             v3_add_expense_description.add_description_migration(),
+            v4_add_user_config.add_user_config_migration(),
         ]
 
-        if db_version > len(migrations):
+        if db_version >= len(migrations):
+            return  # no new migration
+        elif db_version > len(migrations):
             raise RuntimeError(
                 "Database is newer than budgeteer, please update budgeteer to the latest version"
             )
 
-        for i, migration in enumerate(migrations):
+        print(f"Applying {len(migrations) - db_version} migrations...")
+        for i in range(db_version, len(migrations)):
+            migration = migrations[i]
             m_version = i + 1
-            if m_version > db_version:
-                print(f"Applied migration: {migration.description}")
-                migration.up(self.connection)
-                self._set_version(m_version)
-            else:
-                break
+            migration.up(self.connection)
+            self._set_version(m_version)
+            print(f" - Applied migration ({m_version}): {migration.description}")
+
+        print()
 
     def get_categories(self) -> list[Category]:
         self.connection.row_factory = sqlite3.Row
@@ -317,6 +323,9 @@ class Database:
 
     def export_expenses_to_csv(self, csv_path: Path) -> bool:
         expenses = self.get_expenses()
+        if not expenses:
+            return True  # nothing to export
+
         category_map = {c.id: c.name for c in self.get_categories()}
 
         expenses_dicts = [e.to_sql() for e in expenses]
@@ -334,5 +343,70 @@ class Database:
 
             writer.writeheader()
             writer.writerows(expenses_dicts)
+
+        return True
+
+    def get_user_config(self) -> UserConfig:
+        self.connection.row_factory = sqlite3.Row
+        cursor = self.connection.cursor()
+
+        result = cursor.execute(
+            f"""
+            SELECT * from {UserConfig.table_name()}
+            LIMIT 1
+            """
+        )
+
+        db_user_config = result.fetchone()
+
+        if db_user_config is not None:
+            return user_config_from_sql(db_user_config)
+
+        cursor.close()
+        self.connection.row_factory = None
+        cursor = self.connection.cursor()
+
+        user_config = UserConfig(None, None, None)
+        cursor.execute(
+            f"""
+            INSERT INTO {UserConfig.table_name()} VALUES({user_config.sql_values()})
+            """,
+            user_config.to_sql(),
+        )
+        self.connection.commit()
+
+        return user_config
+
+    def update_user_config(self, user_config: UserConfig) -> UserConfig:
+        self.connection.row_factory = None
+        cursor = self.connection.cursor()
+
+        cursor.execute(
+            f"""
+            UPDATE {UserConfig.table_name()}
+            SET
+                backup_dir = ?,
+                start_page_note = ?,
+                db_path = ?
+            """,
+            (
+                user_config.backup_dir,
+                user_config.start_page_note,
+                user_config.db_path,
+            ),
+        )
+
+        self.connection.commit()
+
+        return user_config
+
+    def export_user_config_to_csv(self, csv_path: Path) -> bool:
+        user_config = self.get_user_config().to_sql()
+
+        with open(csv_path, "x", newline="") as f:
+            writer = csv.DictWriter(f, delimiter=";", fieldnames=user_config.keys())
+
+            writer.writeheader()
+            writer.writerows([user_config])
 
         return True

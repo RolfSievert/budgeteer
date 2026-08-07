@@ -1,6 +1,5 @@
 #! /usr/bin/env python
-# -*- coding: utf-8 -*-
-# vim:fenc=utf-8
+
 import argparse
 from datetime import datetime
 from pathlib import Path
@@ -100,10 +99,16 @@ def main():
         export_dir.mkdir(parents=True, exist_ok=True)
 
     if export_dir:
-        csv_path = (
+        expenses_path = (
             export_dir / f"expenses-{datetime.now().strftime('%Y-%m-%d-%H-%M-%S')}.csv"
         )
-        database.export_expenses_to_csv(csv_path)
+        database.export_expenses_to_csv(expenses_path)
+
+        config_path = (
+            export_dir
+            / f"user-config-{datetime.now().strftime('%Y-%m-%d-%H-%M-%S')}.csv"
+        )
+        database.export_user_config_to_csv(config_path)
 
 
 if __name__ == "__main__":

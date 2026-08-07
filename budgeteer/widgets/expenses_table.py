@@ -139,10 +139,10 @@ def expenses_table(
         to_container(widgets.Label("\n".join(rows))),
     )
 
-    def scroll_up(event: KeyPressEvent):
+    def scroll_up(_: KeyPressEvent):
         scrollable_pane.vertical_scroll = max(scrollable_pane.vertical_scroll - 1, 0)
 
-    def scroll_down(event: KeyPressEvent):
+    def scroll_down(_: KeyPressEvent):
         scrollable_pane.vertical_scroll = min(
             scrollable_pane.vertical_scroll + 1, len(expenses) - 1
         )
