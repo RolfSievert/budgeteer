@@ -1,10 +1,11 @@
 #! /usr/bin/env python
 
 import argparse
-from datetime import datetime
 from pathlib import Path
 
 from budgeteer.database import Database
+from budgeteer.datetime_utils import localnow
+from budgeteer.entities.user_config import UserConfig
 from budgeteer.prompts.delete_expense import delete_expenses
 from budgeteer.prompts.edit_expenses import edit_expenses
 from budgeteer.prompts.enter_expenses import enter_expenses
@@ -22,9 +23,7 @@ class Args(argparse.Namespace):
     backup_dir: Path
 
 
-def main():
-    user_config = get_user_config()
-
+def parse_program_args(user_config: UserConfig) -> Args:
     parser = argparse.ArgumentParser(
         prog="budgeteer",
         description="A tool for downloading and testing programming problems",
@@ -48,17 +47,11 @@ def main():
         help="Export a backup csv of the database in target directory upon exit",
     )
 
-    args = parser.parse_args(namespace=Args)
+    parsed_args = parser.parse_args(namespace=Args())
+    return parsed_args
 
-    if args.monthly_reminder:
-        print("TODO")
 
-    db_path: Path = args.database_path
-    # create the db path if it does not exist already
-    db_path.parent.mkdir(parents=True, exist_ok=True)
-
-    database = Database(db_path)
-
+def run_app(database: Database) -> None:
     while True:
         option = main_menu(db=database)
 
@@ -95,21 +88,42 @@ def main():
 
                 month_action = month_menu(database, year=month.year, month=month.month)
 
-    export_dir: Path | None = args.backup_dir
+
+def export_all_data(export_dir: Path, database: Database):
     # create the export path if it does not exist already
     if export_dir:
         export_dir.mkdir(parents=True, exist_ok=True)
 
-    if export_dir:
-        expenses_path = (
-            export_dir / f"expenses-{datetime.now().strftime('%Y-%m-%d-%H-%M-%S')}.csv"
-        )
-        database.export_expenses_to_csv(expenses_path)
+    expenses_path = (
+        export_dir / f"expenses-{localnow().strftime('%Y-%m-%d-%H-%M-%S')}.csv"
+    )
+    database.export_expenses_to_csv(expenses_path)
 
-        metadata_path = (
-            export_dir / f"metadata-{datetime.now().strftime('%Y-%m-%d-%H-%M-%S')}.csv"
-        )
-        database.export_metadata_to_csv(metadata_path)
+    metadata_path = (
+        export_dir / f"metadata-{localnow().strftime('%Y-%m-%d-%H-%M-%S')}.csv"
+    )
+    database.export_metadata_to_csv(metadata_path)
+
+
+def main():
+    user_config = get_user_config()
+
+    args = parse_program_args(user_config)
+
+    if args.monthly_reminder:
+        print("TODO")
+
+    db_path: Path = args.database_path
+    # create the db path if it does not exist already
+    db_path.parent.mkdir(parents=True, exist_ok=True)
+
+    database = Database(db_path)
+    run_app(database)
+
+    export_dir: Path | None = args.backup_dir
+
+    if export_dir:
+        export_all_data(export_dir, database)
 
 
 if __name__ == "__main__":
