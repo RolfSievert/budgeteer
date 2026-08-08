@@ -1,32 +1,10 @@
+from pathlib import Path
 from typing import NamedTuple
 
 
 class UserConfig(NamedTuple):
-    backup_dir: str | None
-    db_path: str | None
+    backup_dir: Path | None
+    db_path: Path | None
 
     def __str__(self) -> str:
         return f"{self.__class__.__name__}(backup_dir={self.backup_dir}, db_path={self.db_path})"
-
-    def to_sql(self) -> dict:
-        return {
-            "backup_dir": self.backup_dir,
-            "db_path": self.db_path,
-        }
-
-    def sql_values(self) -> str:
-        """
-        Returns placeholder names for the object, like ":id, :created_at, ..."
-        """
-        prepended = [":" + tag for tag in self.to_sql()]
-        return ", ".join(prepended)
-
-    def table_name() -> str:
-        return "user_config"
-
-
-def user_config_from_sql(sql: dict) -> UserConfig:
-    return UserConfig(
-        backup_dir=sql["backup_dir"],
-        db_path=sql["db_path"],
-    )

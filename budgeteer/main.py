@@ -4,8 +4,6 @@ import argparse
 from datetime import datetime
 from pathlib import Path
 
-from platformdirs import PlatformDirs
-
 from budgeteer.database import Database
 from budgeteer.prompts.delete_expense import delete_expenses
 from budgeteer.prompts.edit_expenses import edit_expenses
@@ -15,14 +13,18 @@ from budgeteer.prompts.main_meny import main_menu
 from budgeteer.prompts.month_menu import month_menu
 from budgeteer.prompts.month_menu_options import MonthMenuOptions
 from budgeteer.prompts.month_selection import month_selection
+from budgeteer.user_config import data_dir, get_user_config
 
 
-def data_dir() -> Path:
-    dirs = PlatformDirs("budgeteer", "RolfSievert")
-    return dirs.user_data_path
+class Args(argparse.Namespace):
+    monthly_reminder: str
+    database_path: Path
+    backup_dir: Path
 
 
 def main():
+    user_config = get_user_config()
+
     parser = argparse.ArgumentParser(
         prog="budgeteer",
         description="A tool for downloading and testing programming problems",
@@ -35,18 +37,18 @@ def main():
     )
     parser.add_argument(
         "--database-path",
-        default=data_dir() / "database.sqlite",
+        default=user_config.db_path or data_dir() / "database.sqlite",
         type=Path,
         help="override database path",
     )
     parser.add_argument(
         "--backup-dir",
-        default=None,
+        default=user_config.backup_dir,
         type=Path,
         help="Export a backup csv of the database in target directory upon exit",
     )
 
-    args = parser.parse_args()
+    args = parser.parse_args(namespace=Args)
 
     if args.monthly_reminder:
         print("TODO")

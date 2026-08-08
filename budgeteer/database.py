@@ -6,13 +6,11 @@ from pathlib import Path
 from budgeteer.entities.category import Category, category_from_sql
 from budgeteer.entities.expense import Expense, expense_from_sql
 from budgeteer.entities.metadata import Metadata, metadata_from_sql
-from budgeteer.entities.user_config import UserConfig, user_config_from_sql
 from budgeteer.migrations import (
     v1_add_category,
     v2_add_expense,
     v3_add_expense_description,
-    v4_add_user_config,
-    v5_add_metadata,
+    v4_add_metadata,
 )
 
 
@@ -105,8 +103,7 @@ class Database:
             v1_add_category.add_category_migration(),
             v2_add_expense.add_expense_migration(),
             v3_add_expense_description.add_description_migration(),
-            v4_add_user_config.add_user_config_migration(),
-            v5_add_metadata.add_metadata_migration(),
+            v4_add_metadata.add_metadata_migration(),
         ]
 
         if db_version >= len(migrations):
@@ -348,58 +345,6 @@ class Database:
             writer.writerows(expenses_dicts)
 
         return True
-
-    def get_user_config(self) -> UserConfig:
-        self.connection.row_factory = sqlite3.Row
-        cursor = self.connection.cursor()
-
-        result = cursor.execute(
-            f"""
-            SELECT * from {UserConfig.table_name()}
-            LIMIT 1
-            """
-        )
-
-        db_user_config = result.fetchone()
-
-        if db_user_config is not None:
-            return user_config_from_sql(db_user_config)
-
-        cursor.close()
-        self.connection.row_factory = None
-        cursor = self.connection.cursor()
-
-        user_config = UserConfig(None, None)
-        cursor.execute(
-            f"""
-            INSERT INTO {UserConfig.table_name()} VALUES({user_config.sql_values()})
-            """,
-            user_config.to_sql(),
-        )
-        self.connection.commit()
-
-        return user_config
-
-    def update_user_config(self, user_config: UserConfig) -> UserConfig:
-        self.connection.row_factory = None
-        cursor = self.connection.cursor()
-
-        cursor.execute(
-            f"""
-            UPDATE {UserConfig.table_name()}
-            SET
-                backup_dir = ?,
-                db_path = ?
-            """,
-            (
-                user_config.backup_dir,
-                user_config.db_path,
-            ),
-        )
-
-        self.connection.commit()
-
-        return user_config
 
     def get_metadata(self) -> Metadata:
         self.connection.row_factory = sqlite3.Row
