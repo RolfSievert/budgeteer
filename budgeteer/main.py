@@ -61,9 +61,11 @@ def parse_program_args() -> ProgramSettings:
         user_settings_path: Path | None
 
     args = parser.parse_args(namespace=Args())
+    user_settings_path = args.user_settings_path or default_user_settings_path()
+
     user_settings = (
-        get_user_settings(args.user_settings_path)
-        if (args.user_settings_path and args.user_settings_path.is_file())
+        get_user_settings(user_settings_path)
+        if (user_settings_path and user_settings_path.is_file())
         else None
     )
 
@@ -74,7 +76,6 @@ def parse_program_args() -> ProgramSettings:
     backup_dir = args.backup_dir or (
         user_settings.backup_dir if user_settings else None
     )
-    user_settings_path = args.user_settings_path or default_user_settings_path()
 
     return ProgramSettings(
         user_settings_path=user_settings_path,
