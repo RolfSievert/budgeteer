@@ -2,13 +2,14 @@ from prompt_toolkit import Application, widgets
 from prompt_toolkit.document import Document
 from prompt_toolkit.key_binding import KeyBindings, KeyPressEvent
 from prompt_toolkit.layout import Container, HSplit, Layout
+from prompt_toolkit.validation import ValidationError
 
 from budgeteer.database import Database
 from budgeteer.entities.category import Category
 from budgeteer.entities.expense import Expense
 from budgeteer.prompts.select_expense import select_expense
 from budgeteer.prompts.validators.yes_no_validator import YesNoValidator
-from budgeteer.str_utils import date_to_str
+from budgeteer.utils.str_utils import date_to_str
 from budgeteer.widgets.expenses_table import expenses_table
 
 
@@ -23,7 +24,7 @@ def delete_expense(
 
     expense_summary = f"""Expense name: {expense.name}
 Description: {expense.description if expense.description else ""}
-Price: {str(expense.price)}
+Price: {expense.price!s}
 Date: {date_to_str(expense.date())}
 Category: {next((c.name for c in categories if c.id == expense.category_id), "")}"""
     delete_prompt = widgets.TextArea(
@@ -51,7 +52,7 @@ Category: {next((c.name for c in categories if c.id == expense.category_id), "")
         delete_entry = delete_prompt.text.strip()
         try:
             YesNoValidator().validate(Document(delete_entry))
-        except Exception as e:
+        except ValidationError as e:
             status_bar.text = str(e)
             return
 

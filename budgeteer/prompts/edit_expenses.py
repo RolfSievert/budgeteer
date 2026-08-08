@@ -1,9 +1,8 @@
-from datetime import datetime
-
 from prompt_toolkit import Application, widgets
 from prompt_toolkit.document import Document
 from prompt_toolkit.key_binding import KeyBindings, KeyPressEvent
 from prompt_toolkit.layout import Container, HSplit, Layout
+from prompt_toolkit.validation import ValidationError
 
 from budgeteer.database import Database
 from budgeteer.entities.category import Category
@@ -13,7 +12,8 @@ from budgeteer.prompts.select_expense import select_expense
 from budgeteer.prompts.validators.date_validator import DateValidator
 from budgeteer.prompts.validators.non_empty_validator import NonEmptyValidator
 from budgeteer.prompts.validators.price_validator import PriceValidator
-from budgeteer.str_utils import date_to_str, str_to_date
+from budgeteer.utils.datetime_utils import utcnow
+from budgeteer.utils.str_utils import date_to_str, str_to_date
 from budgeteer.widgets.expenses_table import expenses_table
 
 
@@ -87,11 +87,11 @@ def edit_expense(
         )
     )
 
-    layout.focus(name_prompt)
+    layout.focus(prompts[0])
 
     @kb.add("c-j")
     @kb.add("down")
-    def focus_up(event: KeyPressEvent):
+    def focus_up(_: KeyPressEvent):
         for i, p in enumerate(prompts):
             if layout.has_focus(p):
                 layout.focus(prompts[(i + 1) % len(prompts)])
@@ -99,7 +99,7 @@ def edit_expense(
 
     @kb.add("c-k")
     @kb.add("up")
-    def focus_down(event: KeyPressEvent):
+    def focus_down(_: KeyPressEvent):
         for i, p in reversed(tuple(enumerate(prompts))):
             if layout.has_focus(p):
                 layout.focus(prompts[(i - 1) % len(prompts)])
@@ -110,7 +110,7 @@ def edit_expense(
         name = name_prompt.text.strip()
         try:
             NonEmptyValidator().validate(Document(name))
-        except Exception as e:
+        except ValidationError as e:
             status_bar.text = str(e)
             return
 
@@ -121,14 +121,14 @@ def edit_expense(
         price = price_prompt.text
         try:
             PriceValidator().validate(Document(price))
-        except Exception as e:
+        except ValidationError as e:
             status_bar.text = str(e)
             return
 
         date_str = date_prompt.text
         try:
             DateValidator().validate(Document(date_str))
-        except Exception as e:
+        except ValidationError as e:
             status_bar.text = str(e)
             return
 
@@ -141,9 +141,7 @@ def edit_expense(
             )
             if category_match is None:
                 category = database.new_category(
-                    Category(
-                        name=category_str, description="", created_at=datetime.now()
-                    )
+                    Category(name=category_str, description="", created_at=utcnow())
                 )
                 category_id = category.id
             else:

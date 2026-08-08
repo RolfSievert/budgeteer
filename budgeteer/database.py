@@ -24,6 +24,9 @@ class Database:
         # migrate the database if needed
         self._migrate()
 
+    def close(self):
+        self.connection.close()
+
     def _str_to_date(self, time: str) -> date:
         return date.fromisoformat(time)
 
@@ -236,7 +239,7 @@ class Database:
         id = cursor.lastrowid
 
         if not isinstance(id, int):
-            raise RuntimeError(
+            raise TypeError(
                 f"Expected integer primary key, got {id!r} ({type(id).__name__})"
             )
 

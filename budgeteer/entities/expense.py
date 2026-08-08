@@ -3,7 +3,7 @@ from datetime import datetime
 from typing import NamedTuple
 
 from budgeteer.models.month import Month
-from budgeteer.str_utils import str_to_time
+from budgeteer.utils.str_utils import str_to_time
 
 
 class Expense(NamedTuple):

@@ -10,7 +10,8 @@ build:
 run *args:
     @# use -m so that imports are relative the package root
     python3 -m {{ app_name }}.main {{ args }} \
-        --database-path test/test.sqlite \
+        --user-settings-path test/user-settings.json \
+        --db-path test/test.sqlite \
         --backup-dir test
 
 # install with pipx

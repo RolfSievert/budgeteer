@@ -12,7 +12,7 @@ from prompt_toolkit.layout import (
 
 from budgeteer.entities.category import Category
 from budgeteer.entities.expense import Expense
-from budgeteer.str_utils import date_to_str
+from budgeteer.utils.str_utils import date_to_str
 
 
 class ExpenseColumnWidths(NamedTuple):

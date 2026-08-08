@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import NamedTuple
 
-from budgeteer.str_utils import str_to_time
+from budgeteer.utils.str_utils import str_to_time
 
 
 class Category(NamedTuple):
@@ -25,7 +25,7 @@ class Category(NamedTuple):
         """
         Returns placeholder names for the object, like ":id, :created_at, ..."
         """
-        prepended = [":" + tag for tag in self.to_sql().keys()]
+        prepended = [":" + tag for tag in self.to_sql()]
         return ", ".join(prepended)
 
     def table_name() -> str:

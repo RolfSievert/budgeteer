@@ -1,10 +1,11 @@
-from datetime import date, datetime
+from datetime import date
 from typing import NamedTuple
 
 from prompt_toolkit import Application, widgets
 from prompt_toolkit.document import Document
 from prompt_toolkit.key_binding import KeyBindings, KeyPressEvent
 from prompt_toolkit.layout import Container, HSplit, Layout
+from prompt_toolkit.validation import ValidationError
 
 from budgeteer.database import Database
 from budgeteer.entities.category import Category
@@ -13,7 +14,8 @@ from budgeteer.prompts.completers.completers import fuzzy_sentence_completer
 from budgeteer.prompts.validators.date_validator import DateValidator
 from budgeteer.prompts.validators.non_empty_validator import NonEmptyValidator
 from budgeteer.prompts.validators.price_validator import PriceValidator
-from budgeteer.str_utils import str_to_date
+from budgeteer.utils.datetime_utils import utcnow
+from budgeteer.utils.str_utils import str_to_date
 from budgeteer.widgets.expenses_table import expenses_table
 
 
@@ -56,7 +58,7 @@ def prompt_category(
         category = next((x for x in categories if x.name == text), None)
         if category is None:
             category = database.new_category(
-                Category(name=text, description="", created_at=datetime.now())
+                Category(name=text, description="", created_at=utcnow())
             )
         event.app.exit(result=category)
 
@@ -108,7 +110,7 @@ def prompt_day(
         text = f"{year}-{month}-{prompt_window.text}"
         try:
             DateValidator().validate(Document(text))
-        except Exception as e:
+        except ValidationError as e:
             status_bar.text = str(e)
 
         event.app.exit(result=str_to_date(text))
@@ -137,14 +139,14 @@ def prompt_day(
         status_bar.text = default_status
 
     @kb.add("backspace")
-    def erase(event: KeyPressEvent):
+    def erase(_: KeyPressEvent):
         prompt_window.text = prompt_window.text[:-1]
         prompt_window.buffer.cursor_right(len(prompt_window.text))
         status_bar.text = default_status
 
     @kb.add("up")
     @kb.add("k")
-    def up(event: KeyPressEvent):
+    def up(_: KeyPressEvent):
         if not prompt_window.text:
             prompt_window.text = "1"
             prompt_window.buffer.cursor_right(len(prompt_window.text))
@@ -162,7 +164,7 @@ def prompt_day(
 
     @kb.add("down")
     @kb.add("j")
-    def down(event: KeyPressEvent):
+    def down(_: KeyPressEvent):
         if not prompt_window.text:
             prompt_window.text = "31"
             prompt_window.buffer.cursor_right(len(prompt_window.text))
@@ -179,7 +181,7 @@ def prompt_day(
         status_bar.text = default_status
 
     @kb.add("<any>")
-    def swallow_keypress(event: KeyPressEvent):
+    def swallow_keypress(_: KeyPressEvent):
         pass
 
     app = Application(
@@ -216,7 +218,7 @@ def prompt_price(
         try:
             PriceValidator().validate(Document(prompt_window.text))
             event.app.exit(result=prompt_window.text)
-        except Exception as e:
+        except ValidationError as e:
             status_bar.text = str(e)
 
     @kb.add("escape")
@@ -244,13 +246,13 @@ def prompt_price(
         status_bar.text = default_status
 
     @kb.add("backspace")
-    def erase(event: KeyPressEvent):
+    def erase(_: KeyPressEvent):
         prompt_window.text = prompt_window.text[:-1]
         prompt_window.buffer.cursor_right(len(prompt_window.text))
         status_bar.text = default_status
 
     @kb.add("<any>")
-    def swallow_keypress(event: KeyPressEvent):
+    def swallow_keypress(_: KeyPressEvent):
         pass
 
     app = Application(
@@ -307,7 +309,7 @@ def prompt_expense_name(
     @kb.add("c-k")
     @kb.add("up")
     @kb.add("down")
-    def change_focus(event: KeyPressEvent):
+    def change_focus(_: KeyPressEvent):
         if layout.has_focus(description_prompt):
             layout.focus(name_prompt)
         elif layout.has_focus(name_prompt):
@@ -317,7 +319,7 @@ def prompt_expense_name(
     def submit(event: KeyPressEvent):
         try:
             NonEmptyValidator().validate(Document(name_prompt.text))
-        except Exception as e:
+        except ValidationError as e:
             status_bar.text = str(e)
             return
 
@@ -426,7 +428,7 @@ def enter_expenses(database: Database, year: int, month: int) -> None:
                 category_id=expense_category.id
                 if expense_category is not None
                 else None,
-                created_at=datetime.now(),
+                created_at=utcnow(),
                 description=expense.description,
             )
         )

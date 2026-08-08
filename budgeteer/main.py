@@ -3,27 +3,27 @@
 import argparse
 from pathlib import Path
 
+from budgeteer.app_data import (
+    default_database_path,
+    default_user_settings_path,
+    get_user_settings,
+)
 from budgeteer.database import Database
-from budgeteer.datetime_utils import localnow
-from budgeteer.entities.user_config import UserConfig
+from budgeteer.entities.program_settings import ProgramSettings
+from budgeteer.entities.user_settings import UserSettings
 from budgeteer.prompts.delete_expense import delete_expenses
 from budgeteer.prompts.edit_expenses import edit_expenses
+from budgeteer.prompts.edit_user_settings import edit_user_settings
 from budgeteer.prompts.enter_expenses import enter_expenses
 from budgeteer.prompts.main_menu_options import MainMenuOptions
 from budgeteer.prompts.main_meny import main_menu
 from budgeteer.prompts.month_menu import month_menu
 from budgeteer.prompts.month_menu_options import MonthMenuOptions
 from budgeteer.prompts.month_selection import month_selection
-from budgeteer.user_config import data_dir, get_user_config
+from budgeteer.utils.datetime_utils import localnow
 
 
-class Args(argparse.Namespace):
-    monthly_reminder: str
-    database_path: Path
-    backup_dir: Path
-
-
-def parse_program_args(user_config: UserConfig) -> Args:
+def parse_program_args() -> ProgramSettings:
     parser = argparse.ArgumentParser(
         prog="budgeteer",
         description="A tool for downloading and testing programming problems",
@@ -35,23 +35,53 @@ def parse_program_args(user_config: UserConfig) -> Args:
         help="prompt the user to enter expenses if due",
     )
     parser.add_argument(
-        "--database-path",
-        default=user_config.db_path or data_dir() / "database.sqlite",
+        "--db-path",
+        default=None,
         type=Path,
-        help="override database path",
+        help="override database location",
     )
     parser.add_argument(
         "--backup-dir",
-        default=user_config.backup_dir,
+        default=None,
         type=Path,
-        help="Export a backup csv of the database in target directory upon exit",
+        help="exports database as .csv to target directory upon exit",
+    )
+    parser.add_argument(
+        "--user-settings-path",
+        default=None,
+        type=Path,
+        help="override location of user settings",
     )
 
-    parsed_args = parser.parse_args(namespace=Args())
-    return parsed_args
+    class Args(argparse.Namespace):
+        monthly_reminder: str
+        db_path: Path | None
+        backup_dir: Path | None
+        user_settings_path: Path | None
+
+    args = parser.parse_args(namespace=Args())
+    user_settings = (
+        get_user_settings(args.user_settings_path)
+        if (args.user_settings_path and args.user_settings_path.is_file())
+        else None
+    )
+
+    # prioritization: passed args > user settings > defaults
+    db_path = args.db_path or (
+        user_settings.db_path if user_settings else default_database_path()
+    )
+    backup_dir = args.backup_dir or (
+        user_settings.backup_dir if user_settings else None
+    )
+    user_settings_path = args.user_settings_path or default_user_settings_path()
+
+    return ProgramSettings(
+        user_settings_path=user_settings_path,
+        user_settings=UserSettings(db_path=db_path, backup_dir=backup_dir),
+    )
 
 
-def run_app(database: Database) -> None:
+def run_app(database: Database, program_settings: ProgramSettings) -> None:
     while True:
         option = main_menu(db=database)
 
@@ -87,6 +117,30 @@ def run_app(database: Database) -> None:
                     delete_expenses(database, year=month.year, month=month.month)
 
                 month_action = month_menu(database, year=month.year, month=month.month)
+        elif option == MainMenuOptions.edit_user_conf:
+            user_settings = edit_user_settings(
+                program_settings.user_settings_path, program_settings.user_settings
+            )
+
+            if (
+                user_settings
+                and user_settings.db_path != program_settings.user_settings.db_path
+            ):
+                database.close()
+                db_path: Path = user_settings.db_path
+                # create the db path if it does not exist already
+                db_path.parent.mkdir(parents=True, exist_ok=True)
+
+                database = Database(db_path)
+
+                program_settings = ProgramSettings(
+                    user_settings_path=program_settings.user_settings_path,
+                    user_settings=user_settings,
+                )
+
+    # run backup at end of program
+    if program_settings.user_settings.backup_dir:
+        export_all_data(program_settings.user_settings.backup_dir, database)
 
 
 def export_all_data(export_dir: Path, database: Database):
@@ -106,24 +160,14 @@ def export_all_data(export_dir: Path, database: Database):
 
 
 def main():
-    user_config = get_user_config()
+    program_settings = parse_program_args()
 
-    args = parse_program_args(user_config)
-
-    if args.monthly_reminder:
-        print("TODO")
-
-    db_path: Path = args.database_path
+    db_path: Path = program_settings.user_settings.db_path
     # create the db path if it does not exist already
     db_path.parent.mkdir(parents=True, exist_ok=True)
 
     database = Database(db_path)
-    run_app(database)
-
-    export_dir: Path | None = args.backup_dir
-
-    if export_dir:
-        export_all_data(export_dir, database)
+    run_app(database, program_settings)
 
 
 if __name__ == "__main__":

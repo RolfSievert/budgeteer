@@ -11,17 +11,24 @@ from budgeteer.widgets.yearly_summary import yearly_summary
 def main_menu(db: Database) -> MainMenuOptions | None:
     add_expenses_option = (MainMenuOptions.add_expenses, "add expenses")
     edit_month_option = (MainMenuOptions.edit_month, "view/edit month")
+    edit_user_conf_option = (MainMenuOptions.edit_user_conf, "edit user settings")
     quit_option = (MainMenuOptions.quit, "quit")
 
     descriptions = {
         MainMenuOptions.add_expenses: "Select a month to add expenses to",
         MainMenuOptions.edit_month: "Select a month to edit",
+        MainMenuOptions.edit_user_conf: "Edit user settings",
         MainMenuOptions.quit: "Exit the application",
     }
 
     kb = KeyBindings()
 
-    options = [add_expenses_option, edit_month_option, quit_option]
+    options = [
+        add_expenses_option,
+        edit_month_option,
+        edit_user_conf_option,
+        quit_option,
+    ]
     prompt_window = widgets.RadioList(
         options,
         select_on_focus=True,
@@ -46,7 +53,7 @@ def main_menu(db: Database) -> MainMenuOptions | None:
 
     @kb.add("up", eager=True)
     @kb.add("k", eager=True)
-    def cursor_up(event: KeyPressEvent):
+    def cursor_up(_: KeyPressEvent):
         i = next(
             i
             for i, x in enumerate(prompt_window.values)
@@ -58,7 +65,7 @@ def main_menu(db: Database) -> MainMenuOptions | None:
 
     @kb.add("down", eager=True)
     @kb.add("j", eager=True)
-    def cursor_down(event: KeyPressEvent):
+    def cursor_down(_: KeyPressEvent):
         i = next(
             i
             for i, x in enumerate(prompt_window.values)
@@ -86,10 +93,10 @@ def main_menu(db: Database) -> MainMenuOptions | None:
         )
     )
 
-    def scroll_up(event: KeyPressEvent):
+    def scroll_up(_: KeyPressEvent):
         expenses_summary.vertical_scroll = max(expenses_summary.vertical_scroll - 1, 0)
 
-    def scroll_down(event: KeyPressEvent):
+    def scroll_down(_: KeyPressEvent):
         expenses_summary.vertical_scroll += 1
 
     kb.add("c-up")(scroll_up)

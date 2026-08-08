@@ -5,3 +5,4 @@ class MainMenuOptions(Enum):
     quit = 1
     add_expenses = 2
     edit_month = 3
+    edit_user_conf = 4

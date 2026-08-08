@@ -8,7 +8,7 @@ class DateValidator(Validator):
         text = document.text
 
         try:
-            date.strptime(text, "%Y-%m-%d")  # ty:ignore[unresolved-attribute]
+            date.strptime(text, "%Y-%m-%d")
         except ValueError:
             raise ValidationError(
                 message="Date has to be on the format '1994-01-09' (year-month-day)"
