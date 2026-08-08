@@ -1,6 +1,13 @@
 from prompt_toolkit import Application, widgets
 from prompt_toolkit.key_binding import KeyBindings, KeyPressEvent
-from prompt_toolkit.layout import HSplit, Layout, ScrollablePane, WindowAlign
+from prompt_toolkit.layout import (
+    AnyContainer,
+    HSplit,
+    Layout,
+    ScrollablePane,
+    VSplit,
+    WindowAlign,
+)
 
 from budgeteer.database import Database
 from budgeteer.prompts.main_menu_options import MainMenuOptions
@@ -11,12 +18,17 @@ from budgeteer.widgets.yearly_summary import yearly_summary
 def main_menu(db: Database) -> MainMenuOptions | None:
     add_expenses_option = (MainMenuOptions.add_expenses, "add expenses")
     edit_month_option = (MainMenuOptions.edit_month, "view/edit month")
+    edit_start_page_note_option = (
+        MainMenuOptions.edit_start_page_note,
+        "edit start page note",
+    )
     edit_user_conf_option = (MainMenuOptions.edit_user_conf, "edit user settings")
     quit_option = (MainMenuOptions.quit, "quit")
 
     descriptions = {
         MainMenuOptions.add_expenses: "Select a month to add expenses to",
         MainMenuOptions.edit_month: "Select a month to edit",
+        MainMenuOptions.edit_start_page_note: "Add/Edit start page note",
         MainMenuOptions.edit_user_conf: "Edit user settings",
         MainMenuOptions.quit: "Exit the application",
     }
@@ -27,6 +39,7 @@ def main_menu(db: Database) -> MainMenuOptions | None:
         add_expenses_option,
         edit_month_option,
         edit_user_conf_option,
+        edit_start_page_note_option,
         quit_option,
     ]
     prompt_window = widgets.RadioList(
@@ -38,6 +51,8 @@ def main_menu(db: Database) -> MainMenuOptions | None:
         show_cursor=False,
     )
     status_bar = widgets.Label(" " + descriptions[options[0][0]])
+
+    start_page_note = db.get_metadata().start_page_note
 
     # RadioList swallows events, eager takes the events first
     @kb.add("enter", eager=True)
@@ -102,6 +117,12 @@ def main_menu(db: Database) -> MainMenuOptions | None:
     kb.add("c-up")(scroll_up)
     kb.add("c-down")(scroll_down)
 
+    menu_bar: list[AnyContainer] = [prompt_window]
+    if start_page_note:
+        # add padding using whitespace
+        start_page_note = "\n".join(" " + line for line in start_page_note.splitlines())
+        menu_bar.append(widgets.Label(start_page_note))
+
     layout = Layout(
         HSplit(
             [
@@ -111,7 +132,7 @@ def main_menu(db: Database) -> MainMenuOptions | None:
                     dont_extend_height=True,
                 ),
                 expenses_summary,
-                widgets.Frame(body=prompt_window),
+                widgets.Frame(body=VSplit(menu_bar)),
                 status_bar,
             ]
         )

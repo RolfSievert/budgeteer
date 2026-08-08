@@ -6,3 +6,4 @@ class MainMenuOptions(Enum):
     add_expenses = 2
     edit_month = 3
     edit_user_conf = 4
+    edit_start_page_note = 5

@@ -13,10 +13,11 @@ from budgeteer.entities.program_settings import ProgramSettings
 from budgeteer.entities.user_settings import UserSettings
 from budgeteer.prompts.delete_expense import delete_expenses
 from budgeteer.prompts.edit_expenses import edit_expenses
+from budgeteer.prompts.edit_start_page_note import edit_start_page_note
 from budgeteer.prompts.edit_user_settings import edit_user_settings
 from budgeteer.prompts.enter_expenses import enter_expenses
+from budgeteer.prompts.main_menu import main_menu
 from budgeteer.prompts.main_menu_options import MainMenuOptions
-from budgeteer.prompts.main_meny import main_menu
 from budgeteer.prompts.month_menu import month_menu
 from budgeteer.prompts.month_menu_options import MonthMenuOptions
 from budgeteer.prompts.month_selection import month_selection
@@ -117,6 +118,9 @@ def run_app(database: Database, program_settings: ProgramSettings) -> None:
                     delete_expenses(database, year=month.year, month=month.month)
 
                 month_action = month_menu(database, year=month.year, month=month.month)
+        elif option == MainMenuOptions.edit_start_page_note:
+            edit_start_page_note(database)
+
         elif option == MainMenuOptions.edit_user_conf:
             user_settings = edit_user_settings(
                 program_settings.user_settings_path, program_settings.user_settings
