@@ -21,6 +21,7 @@ def default_user_settings_path() -> Path:
 
 # returns None if user settings is nonexistent
 def get_user_settings(user_settings_path: Path) -> UserSettings:
+    user_settings_path = user_settings_path.expanduser()
     if not user_settings_path.is_file():
         raise RuntimeError(f"Not a valid user settings path: {user_settings_path}")
 
@@ -41,7 +42,7 @@ def set_user_settings(user_settings_path: Path, settings: UserSettings) -> UserS
                 return str(o)
             return super().default(o)
 
-    with open(user_settings_path, "w") as f:
+    with open(user_settings_path.expanduser(), "w") as f:
         json.dump(settings._asdict(), f, cls=PathEncoder)
 
     return settings

@@ -78,7 +78,10 @@ def parse_program_args() -> ProgramSettings:
 
     return ProgramSettings(
         user_settings_path=user_settings_path,
-        user_settings=UserSettings(db_path=db_path, backup_dir=backup_dir),
+        user_settings=UserSettings(
+            db_path=db_path,
+            backup_dir=backup_dir,
+        ),
     )
 
 
@@ -126,25 +129,25 @@ def run_app(database: Database, program_settings: ProgramSettings) -> None:
                 program_settings.user_settings_path, program_settings.user_settings
             )
 
-            if (
-                user_settings
-                and user_settings.db_path != program_settings.user_settings.db_path
-            ):
-                database.close()
-                db_path: Path = user_settings.db_path
-                # create the db path if it does not exist already
-                db_path.parent.mkdir(parents=True, exist_ok=True)
-
-                database = Database(db_path)
-
+            if user_settings:
                 program_settings = ProgramSettings(
                     user_settings_path=program_settings.user_settings_path,
                     user_settings=user_settings,
                 )
+                if user_settings.db_path != program_settings.user_settings.db_path:
+                    database.close()
+                    db_path: Path = user_settings.db_path
+                    # create the db path if it does not exist already
+                    db_path.parent.mkdir(parents=True, exist_ok=True)
+
+                    database = Database(db_path)
 
     # run backup at end of program
-    if program_settings.user_settings.backup_dir:
-        export_all_data(program_settings.user_settings.backup_dir, database)
+    backup_dir = program_settings.user_settings.backup_dir
+    if backup_dir:
+        print(f"Exporting database to '{backup_dir.as_posix()}'...")
+        export_all_data(backup_dir.expanduser(), database)
+        print("Done!")
 
 
 def export_all_data(export_dir: Path, database: Database):
@@ -166,7 +169,7 @@ def export_all_data(export_dir: Path, database: Database):
 def main():
     program_settings = parse_program_args()
 
-    db_path: Path = program_settings.user_settings.db_path
+    db_path: Path = program_settings.user_settings.db_path.expanduser()
     # create the db path if it does not exist already
     db_path.parent.mkdir(parents=True, exist_ok=True)
 

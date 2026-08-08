@@ -38,8 +38,8 @@ def main_menu(db: Database) -> MainMenuOptions | None:
     options = [
         add_expenses_option,
         edit_month_option,
-        edit_user_conf_option,
         edit_start_page_note_option,
+        edit_user_conf_option,
         quit_option,
     ]
     prompt_window = widgets.RadioList(

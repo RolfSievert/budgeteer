@@ -1,5 +1,3 @@
-import re
-
 from prompt_toolkit import Application, widgets
 from prompt_toolkit.document import Document
 from prompt_toolkit.key_binding import KeyBindings, KeyPressEvent
